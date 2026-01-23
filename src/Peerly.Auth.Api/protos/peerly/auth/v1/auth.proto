@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+import "peerly/auth/v1/common.proto";
+
+package peerly.auth.v1;
+
+option csharp_namespace = "Peerly.Auth.V1.Proto";
+
+service AuthService {
+  rpc V1Login(V1LoginRequest) returns (V1LoginResponse);
+  rpc V1Logout(V1LogoutRequest) returns (V1LogoutResponse);
+  rpc V1RefreshToken(V1RefreshTokenRequest) returns (V1RefreshTokenResponse);
+  rpc V1GetJwks(V1GetJwksRequest) returns (V1GetJwksResponse);
+}
+
+message V1LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message V1LoginResponse {
+  oneof response {
+    Success success_response = 1;
+    ValidationError validation_error = 2;
+    OtherError other_error = 3;
+  }
+
+  message Success {
+    Token token = 1;
+    int64 user_id = 2;
+  }
+}
+
+message V1LogoutRequest {}
+
+message V1LogoutResponse {}
+
+message V1RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message V1RefreshTokenResponse {
+  oneof response {
+    Success success_response = 1;
+    ValidationError validation_error = 2;
+    OtherError other_error = 3;
+  }
+
+  message Success {
+    Token token = 1;
+  }
+}
+
+message V1GetJwksRequest {
+  string issuer = 1;
+}
+
+message V1GetJwksResponse {
+  string jwks_json = 1;
+}
