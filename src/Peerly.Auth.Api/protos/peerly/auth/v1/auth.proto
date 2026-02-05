@@ -56,5 +56,5 @@ message V1GetJwksRequest {
 }
 
 message V1GetJwksResponse {
-  string jwks_json = 1;
+  repeated string jwks = 1;
 }

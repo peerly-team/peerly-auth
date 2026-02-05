@@ -7,5 +7,5 @@ namespace Peerly.Auth.ApplicationServices.Abstractions;
 public interface ICommandHandler<in TCommand, TSuccess>
     where TCommand : ICommand<TSuccess>
 {
-    Task<CommandResponse<TSuccess>> Execute(TCommand command, CancellationToken cancellationToken);
+    Task<CommandResponse<TSuccess>> ExecuteAsync(TCommand command, CancellationToken cancellationToken);
 }

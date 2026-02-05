@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Peerly.Auth.ApplicationServices.Features.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.Auth.Login;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Proto = Peerly.Auth.V1;
@@ -25,7 +26,7 @@ internal static class AuthMappingExtensions
             {
                 ValidationError = validationError.ToProto<LoginCommand, Proto.V1LoginRequest>()
             },
-            otherError => new Proto.V1LoginResponse {OtherError = otherError.ToProto()});
+            otherError => new Proto.V1LoginResponse { OtherError = otherError.ToProto() });
 
         static Proto.V1LoginResponse.Types.Success ToSuccessResponse(LoginCommandResponse commandSuccess)
         {
@@ -39,5 +40,18 @@ internal static class AuthMappingExtensions
                 UserId = (long)commandSuccess.UserId
             };
         }
+    }
+
+    public static GetJwksQuery ToGetJwksQuery(this Proto.V1GetJwksRequest _)
+    {
+        return new GetJwksQuery();
+    }
+
+    public static Proto.V1GetJwksResponse ToV1GetJwksResponse(this GetJwksQueryResponse queryResponse)
+    {
+        return new Proto.V1GetJwksResponse
+        {
+            Jwks = { queryResponse.Jwks }
+        };
     }
 }

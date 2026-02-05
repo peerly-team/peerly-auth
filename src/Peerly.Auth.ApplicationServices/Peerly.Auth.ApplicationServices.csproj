@@ -3,4 +3,7 @@
     <ProjectReference Include="..\Peerly.Auth.Tools\Peerly.Auth.Tools.csproj"/>
     <ProjectReference Include="..\Peerly.Auth\Peerly.Auth.csproj"/>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
 </Project>
