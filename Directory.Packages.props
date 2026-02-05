@@ -13,6 +13,7 @@
     <!-- Third-party packages -->
     <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageVersion Include="FluentValidation" Version="12.0.0" />
     <PackageVersion Include="Grpc.AspNetCore.Server.Reflection" Version="2.76.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
