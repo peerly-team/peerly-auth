@@ -1,4 +1,4 @@
 -- +goose Up
 -- +goose StatementBegin
-SELECT 1;
+select 1;
 -- +goose StatementEnd

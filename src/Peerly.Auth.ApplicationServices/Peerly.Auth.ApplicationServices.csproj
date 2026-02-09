@@ -4,6 +4,11 @@
     <ProjectReference Include="..\Peerly.Auth\Peerly.Auth.csproj"/>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Devolutions.Zxcvbn" />
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\V1\" />
   </ItemGroup>
 </Project>

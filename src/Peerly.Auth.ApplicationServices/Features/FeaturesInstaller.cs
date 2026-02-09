@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Peerly.Auth.ApplicationServices.Abstractions;
-using Peerly.Auth.ApplicationServices.Features.Auth.GetJwks;
-using Peerly.Auth.ApplicationServices.Features.Auth.Login;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.Tools;
 using Peerly.Auth.Tools.Abstractions;
 

@@ -32,3 +32,10 @@ message Token {
   string access_token = 1;
   string refresh_token = 2;
 }
+
+enum Role {
+  ROLE_UNKNOWN = 0;
+  ROLE_ADMIN = 1;
+  ROLE_TEACHER = 2;
+  ROLE_STUDENT = 3;
+}

@@ -7,10 +7,31 @@ package peerly.auth.v1;
 option csharp_namespace = "Peerly.Auth.V1.Proto";
 
 service AuthService {
+  rpc V1Register(V1RegisterRequest) returns (V1RegisterResponse);
   rpc V1Login(V1LoginRequest) returns (V1LoginResponse);
   rpc V1Logout(V1LogoutRequest) returns (V1LogoutResponse);
   rpc V1RefreshToken(V1RefreshTokenRequest) returns (V1RefreshTokenResponse);
   rpc V1GetJwks(V1GetJwksRequest) returns (V1GetJwksResponse);
+}
+
+message V1RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string user_name = 3;
+  repeated Role roles = 4;
+}
+
+message V1RegisterResponse {
+  oneof response {
+    Success success_response = 1;
+    ValidationError validation_error = 2;
+    OtherError other_error = 3;
+  }
+
+  message Success {
+    Token token = 1;
+    int64 user_id = 2;
+  }
 }
 
 message V1LoginRequest {

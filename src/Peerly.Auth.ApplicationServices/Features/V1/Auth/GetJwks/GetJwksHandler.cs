@@ -5,7 +5,7 @@ using Peerly.Auth.ApplicationServices.Generators.AuthTokens;
 using Peerly.Auth.ApplicationServices.Providers.AuthTokens.Abstractions;
 using Peerly.Auth.Tools;
 
-namespace Peerly.Auth.ApplicationServices.Features.Auth.GetJwks;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 
 internal sealed class GetJwksHandler : IQueryHandler<GetJwksQuery, GetJwksQueryResponse>
 {

@@ -1,6 +1,6 @@
 using Peerly.Auth.ApplicationServices.Abstractions;
 
-namespace Peerly.Auth.ApplicationServices.Features.Auth.Login;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 
 public sealed record LoginCommand : ICommand<LoginCommandResponse>
 {

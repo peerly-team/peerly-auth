@@ -5,6 +5,9 @@ using Npgsql;
 using Peerly.Auth.Abstractions.Repositories;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.Persistence.Extensions;
+using Peerly.Auth.Persistence.Repositories.EmailVerifications;
+using Peerly.Auth.Persistence.Repositories.Sessions;
+using Peerly.Auth.Persistence.Repositories.UserRoles;
 using Peerly.Auth.Persistence.Repositories.Users;
 using Peerly.Auth.Tools.Abstractions;
 
@@ -22,6 +25,9 @@ internal sealed class UnitOfWorkInstaller : IInstaller
             .BindConfiguration(ConnectionFactoryOptions.SectionName);
 
         services.AddRepositoryFactory<IUserRepository, UserRepository>();
+        services.AddRepositoryFactory<IUserRoleRepository, UserRoleRepository>();
+        services.AddRepositoryFactory<IEmailVerificationRepository, EmailVerificationRepository>();
+        services.AddRepositoryFactory<ISessionRepository, SessionRepository>();
 
         services.AddSingleton<NpgsqlDataSource>(sp =>
         {

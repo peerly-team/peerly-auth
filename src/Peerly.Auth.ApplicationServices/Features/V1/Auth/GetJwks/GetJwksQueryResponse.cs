@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Peerly.Auth.ApplicationServices.Features.Auth.GetJwks;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 
 public sealed record GetJwksQueryResponse
 {
