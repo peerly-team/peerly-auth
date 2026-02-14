@@ -16,7 +16,7 @@ internal sealed class TokenService : ITokenService
         _jwtGenerator = jwtGenerator;
     }
 
-    public AuthToken CreateAuthToken(User user)
+    public AuthToken CreateAuthToken(UserIdRole user)
     {
         var jwt = _jwtGenerator.Create(user);
 

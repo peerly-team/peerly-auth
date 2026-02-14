@@ -5,6 +5,6 @@ namespace Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
 
 internal interface ITokenService
 {
-    AuthToken CreateAuthToken(User user);
+    AuthToken CreateAuthToken(UserIdRole user);
     string CreateEmailVerificationToken();
 }

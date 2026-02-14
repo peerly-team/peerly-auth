@@ -20,7 +20,12 @@ internal sealed class CommonUnitOfWorkFactory : ICommonUnitOfWorkFactory
         _dataSource = dataSource;
     }
 
-    public async Task<ICommonUnitOfWork> Create(CancellationToken cancellationToken)
+    public async Task<ICommonUnitOfWork> CreateAsync(CancellationToken cancellationToken)
+    {
+        return await CreateUnitOfWork(cancellationToken);
+    }
+
+    public async Task<ICommonReadOnlyUnitOfWork> CreateReadOnlyAsync(CancellationToken cancellationToken)
     {
         return await CreateUnitOfWork(cancellationToken);
     }

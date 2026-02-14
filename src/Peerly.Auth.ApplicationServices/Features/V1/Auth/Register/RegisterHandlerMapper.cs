@@ -21,11 +21,11 @@ internal class RegisterHandlerMapper : IRegisterHandlerMapper
         _clock = clock;
     }
 
-    public static User ToUser(UserId userId, IReadOnlyCollection<Role> roles)
+    public static UserIdRole ToUserIdRole(UserId userId, IReadOnlyCollection<Role> roles)
     {
-        return new User
+        return new UserIdRole
         {
-            UserId = userId,
+            Id = userId,
             Roles = roles
         };
     }

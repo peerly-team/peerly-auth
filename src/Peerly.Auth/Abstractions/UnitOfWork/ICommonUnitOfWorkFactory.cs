@@ -5,5 +5,6 @@ namespace Peerly.Auth.Abstractions.UnitOfWork;
 
 public interface ICommonUnitOfWorkFactory
 {
-    Task<ICommonUnitOfWork> Create(CancellationToken cancellationToken);
+    Task<ICommonUnitOfWork> CreateAsync(CancellationToken cancellationToken);
+    Task<ICommonReadOnlyUnitOfWork> CreateReadOnlyAsync(CancellationToken cancellationToken);
 }

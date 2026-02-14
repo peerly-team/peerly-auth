@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 using Devolutions.Zxcvbn;
@@ -8,6 +7,8 @@ using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
+using Peerly.Auth.ApplicationServices.Validation.Errors;
+using Peerly.Auth.ApplicationServices.Validation.Validators;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 
@@ -32,7 +33,7 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
 
     public async Task<CommandResponse<RegisterCommandResponse>> ExecuteAsync(RegisterCommand command, CancellationToken cancellationToken)
     {
-        var unitOfWork = await _unitOfWorkFactory.Create(cancellationToken);
+        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
         var (isError, error) = await CommandValidateAsync(command, unitOfWork, cancellationToken);
         if (isError)
@@ -56,7 +57,7 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationTokenHash);
         _ = await unitOfWork.EmailVerificationRepository.AddAsync(emailVerificationAddItem, cancellationToken);
 
-        var user = RegisterHandlerMapper.ToUser(userId, command.Roles);
+        var user = RegisterHandlerMapper.ToUserIdRole(userId, command.Roles);
         var authToken = _tokenService.CreateAuthToken(user);
 
         var refreshTokenHash = await _hashService.HashAsync(authToken.RefreshToken, cancellationToken);
@@ -83,17 +84,17 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var isEmailExists = await unitOfWork.UserRepository.ExistsAsync(email, cancellationToken);
         if (isEmailExists)
         {
-            return (true, ValidationError.From(RegisterHandlerErrors.EmailAlreadyUsed));
+            return (true, ValidationError.From(EmailErrors.EmailAlreadyUsed));
         }
 
-        if (!(string.IsNullOrWhiteSpace(email) || new EmailAddressAttribute().IsValid(email)))
+        if (!EmailValidator.IsValid(email))
         {
-            return (true, ValidationError.From(RegisterHandlerErrors.IncorrectEmailFormat));
+            return (true, ValidationError.From(EmailErrors.IncorrectEmailFormat));
         }
 
         if (Zxcvbn.Evaluate(command.Password).Score < 3)
         {
-            return (true, ValidationError.From(RegisterHandlerErrors.PasswordIsTooSimple));
+            return (true, ValidationError.From(PasswordErrors.IsTooSimple));
         }
 
         return (false, null);

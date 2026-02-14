@@ -4,6 +4,7 @@ using Dapper;
 using Peerly.Auth.Abstractions.Repositories;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.User;
+using Peerly.Auth.Persistence.Repositories.Users.Models;
 using Peerly.Auth.Persistence.UnitOfWork;
 using static Peerly.Auth.Persistence.Schemas.PeerlyCommonScheme;
 
@@ -53,7 +54,7 @@ internal sealed class UserRepository : IUserRepository
         return new UserId(id);
     }
 
-    public async Task<UserId?> GetAsync(string email, CancellationToken cancellationToken)
+    public async Task<User?> GetAsync(string email, CancellationToken cancellationToken)
     {
         var queryParams = new
         {
@@ -62,9 +63,12 @@ internal sealed class UserRepository : IUserRepository
 
         const string Query =
             $"""
-             select id
-               from users
-              where email = @{nameof(queryParams.Email)};
+             select u.{UserTable.Id},
+                    u.{UserTable.PasswordHash},
+                    ur.{UserRoleTable.RoleId}
+               from {UserTable.TableName} u
+               join {UserRoleTable.TableName} ur on ur.{UserRoleTable.UserId} = u.{UserTable.Id}
+              where u.{UserTable.Email} = @{nameof(queryParams.Email)};
              """;
 
         var command = new CommandDefinition(
@@ -72,9 +76,9 @@ internal sealed class UserRepository : IUserRepository
             parameters: queryParams,
             transaction: _connectionContext.Transaction,
             cancellationToken: cancellationToken);
-        var userId = await _connectionContext.Connection.QuerySingleOrDefaultAsync<long?>(command);
+        var usersDb = await _connectionContext.Connection.QueryAsync<UserDb>(command);
 
-        return userId is null ? null : new UserId(userId.Value);
+        return usersDb.ToUser();
     }
 
     public async Task<bool> ExistsAsync(string email, CancellationToken cancellationToken)

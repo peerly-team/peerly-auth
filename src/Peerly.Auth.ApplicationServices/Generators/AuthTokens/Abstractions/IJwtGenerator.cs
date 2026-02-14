@@ -5,5 +5,5 @@ namespace Peerly.Auth.ApplicationServices.Generators.AuthTokens.Abstractions;
 
 internal interface IJwtGenerator
 {
-    JwtSecurityToken Create(User user);
+    JwtSecurityToken Create(UserIdRole user);
 }

@@ -22,13 +22,13 @@ internal sealed class JwtGenerator : IJwtGenerator
         _signingKeyProvider = signingKeyProvider;
     }
 
-    public JwtSecurityToken Create(User user)
+    public JwtSecurityToken Create(UserIdRole user)
     {
         var issuedAt = _clock.GetCurrentTime();
         var jwtId = Guid.NewGuid(); // todo: нужно сохранить в БД
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // кому принадлежит (постоянное значение)
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // кому принадлежит (постоянное значение)
             new(JwtRegisteredClaimNames.Jti, jwtId.ToString()), // идентификатор JWT
             new(JwtRegisteredClaimNames.Iat, issuedAt.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64) // время выдачи токена
         };
