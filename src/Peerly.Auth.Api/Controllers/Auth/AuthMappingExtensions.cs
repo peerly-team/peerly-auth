@@ -2,8 +2,10 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 using Peerly.Auth.ApplicationServices.Models.Common;
+using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Auth;
 using Peerly.Auth.Models.User;
 using Peerly.Auth.Tools;
@@ -72,6 +74,20 @@ internal static class AuthMappingExtensions
                 UserId = (long)commandSuccess.UserId
             };
         }
+    }
+
+    public static LogoutQuery ToLogoutQuery(this Proto.V1LogoutRequest requestProto)
+    {
+        return new LogoutQuery
+        {
+            UserId = new UserId(requestProto.UserId),
+            RefreshToken = requestProto.RefreshToken
+        };
+    }
+
+    public static Proto.V1LogoutResponse ToV1LogoutResponse(this LogoutQueryResponse _)
+    {
+        return new Proto.V1LogoutResponse();
     }
 
     public static GetJwksQuery ToGetJwksQuery(this Proto.V1GetJwksRequest _)

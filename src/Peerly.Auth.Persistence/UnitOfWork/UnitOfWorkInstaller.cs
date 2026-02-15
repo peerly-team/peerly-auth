@@ -45,5 +45,7 @@ internal sealed class UnitOfWorkInstaller : IInstaller
 
             return NpgsqlDataSource.Create(csb.ConnectionString);
         });
+
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 }

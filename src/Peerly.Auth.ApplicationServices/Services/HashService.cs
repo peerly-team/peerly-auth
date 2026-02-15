@@ -18,7 +18,7 @@ internal sealed class HashService : IHashService
 
     public Task<string> HashAsync(string text, CancellationToken cancellationToken) => Task.Run(() => HashCore(text), cancellationToken);
 
-    private string HashCore(string text)
+    private static string HashCore(string text)
     {
         var salt = new byte[SaltSize];
         using (var rng = RandomNumberGenerator.Create())

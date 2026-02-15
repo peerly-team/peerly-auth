@@ -7,7 +7,8 @@ create table email_verifications
     token_hash        text                  not null,
     expiration_time   timestamptz           not null,
     verification_time timestamptz,
-    creation_time     timestamptz           not null
+    creation_time     timestamptz           not null,
+    update_time       timestamptz
 );
 -- +goose StatementEnd
 

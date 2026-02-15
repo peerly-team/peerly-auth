@@ -6,7 +6,9 @@ create table sessions
     user_id            bigint                not null,
     refresh_token_hash text                  not null,
     expiration_time    timestamptz           not null,
-    creation_time      timestamptz           not null
+    creation_time      timestamptz           not null,
+    cancellation_time  timestamptz,
+    update_time        timestamptz
 );
 -- +goose StatementEnd
 

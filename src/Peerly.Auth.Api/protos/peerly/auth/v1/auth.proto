@@ -52,7 +52,10 @@ message V1LoginResponse {
   }
 }
 
-message V1LogoutRequest {}
+message V1LogoutRequest {
+  int64 user_id = 1;
+  string refresh_token = 2;
+}
 
 message V1LogoutResponse {}
 

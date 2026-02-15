@@ -4,6 +4,7 @@ using Grpc.Core;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 using Peerly.Auth.V1;
 
@@ -15,15 +16,18 @@ public sealed class AuthController : AuthService.AuthServiceBase
     private readonly ICommandHandler<LoginCommand, LoginCommandResponse> _loginHandler;
     private readonly IQueryHandler<GetJwksQuery, GetJwksQueryResponse> _getJwksHandler;
     private readonly ICommandHandler<RegisterCommand, RegisterCommandResponse> _registerHandler;
+    private readonly IQueryHandler<LogoutQuery, LogoutQueryResponse> _logoutHandler;
 
     public AuthController(
         ICommandHandler<LoginCommand, LoginCommandResponse> loginHandler,
         IQueryHandler<GetJwksQuery, GetJwksQueryResponse> getJwksHandler,
-        ICommandHandler<RegisterCommand, RegisterCommandResponse> registerHandler)
+        ICommandHandler<RegisterCommand, RegisterCommandResponse> registerHandler,
+        IQueryHandler<LogoutQuery, LogoutQueryResponse> logoutHandler)
     {
         _loginHandler = loginHandler;
         _getJwksHandler = getJwksHandler;
         _registerHandler = registerHandler;
+        _logoutHandler = logoutHandler;
     }
 
     public override async Task<V1RegisterResponse> V1Register(V1RegisterRequest request, ServerCallContext context)
@@ -38,6 +42,13 @@ public sealed class AuthController : AuthService.AuthServiceBase
         var command = request.ToLoginCommand();
         var commandResponse = await _loginHandler.ExecuteAsync(command, context.CancellationToken);
         return commandResponse.ToV1LoginResponse();
+    }
+
+    public override async Task<V1LogoutResponse> V1Logout(V1LogoutRequest request, ServerCallContext context)
+    {
+        var query = request.ToLogoutQuery();
+        var queryResponse = await _logoutHandler.ExecuteAsync(query, context.CancellationToken);
+        return queryResponse.ToV1LogoutResponse();
     }
 
     public override async Task<V1GetJwksResponse> V1GetJwks(V1GetJwksRequest request, ServerCallContext context)

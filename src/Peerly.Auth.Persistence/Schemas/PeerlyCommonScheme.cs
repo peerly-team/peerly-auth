@@ -34,6 +34,7 @@ internal static class PeerlyCommonScheme
         public const string CreationTime = "creation_time";
         public const string ExpirationTime = "expiration_time";
         public const string VerificationTime = "expiration_time";
+        public const string UpdateTime = "update_time";
     }
 
     public static class SessionTable
@@ -45,5 +46,7 @@ internal static class PeerlyCommonScheme
         public const string RefreshTokenHash = "refresh_token_hash";
         public const string ExpirationTime = "expiration_time";
         public const string CreationTime = "creation_time";
+        public const string CancellationTime = "cancellation_time";
+        public const string UpdateTime = "update_time";
     }
 }
