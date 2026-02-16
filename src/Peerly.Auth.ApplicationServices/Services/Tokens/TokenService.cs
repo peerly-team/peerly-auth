@@ -27,7 +27,14 @@ internal sealed class TokenService : ITokenService
         };
     }
 
-    public string CreateEmailVerificationToken()
+    public string CreateAccessToken(User user)
+    {
+        var jwt = _jwtGenerator.Create(user);
+
+        return new JwtSecurityTokenHandler().WriteToken(jwt);
+    }
+
+    public string CreateRefreshToken()
     {
         return OpaqueTokenGenerator.Run();
     }

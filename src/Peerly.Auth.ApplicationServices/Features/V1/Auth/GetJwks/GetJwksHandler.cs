@@ -18,16 +18,14 @@ internal sealed class GetJwksHandler : IQueryHandler<GetJwksQuery, GetJwksQueryR
         _jsonSerializationService = jsonSerializationService;
     }
 
-    public async Task<GetJwksQueryResponse> ExecuteAsync(GetJwksQuery query, CancellationToken cancellationToken)
+    public Task<GetJwksQueryResponse> ExecuteAsync(GetJwksQuery query, CancellationToken cancellationToken)
     {
-        await Task.Delay(10, cancellationToken); // todo: добавить запись в БД, что кто-то запрашивал токены и что мы ему вернули
-
         var publicKeys = _signingKeyProvider.GetRsaPublicKeys();
         var jwks = JwkGenerator.MassCreate(publicKeys);
 
-        return new GetJwksQueryResponse
+        return Task.FromResult(new GetJwksQueryResponse
         {
             Jwks = jwks.ToArrayBy(jwk => _jsonSerializationService.Serialize(jwk))
-        };
+        });
     }
 }

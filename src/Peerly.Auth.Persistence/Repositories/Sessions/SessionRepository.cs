@@ -52,21 +52,25 @@ internal sealed class SessionRepository : ISessionRepository
         return affectedRow == 1;
     }
 
-    public async Task<bool> UpdateAsync(SessionUpdateItem item, CancellationToken cancellationToken)
+    public async Task<bool> UpdateAsync(SessionFilter filter, SessionUpdateItem item, CancellationToken cancellationToken)
     {
         var queryParams = new
         {
-            item.Id,
-            item.RefreshTokenHash,
+            filter.Id,
+            filter.RefreshTokenHash,
+            item.UpdateTime,
             item.CancellationTime
         };
 
         const string Query =
             $"""
              update {SessionTable.TableName}
-                set {SessionTable.CancellationTime} = @{nameof(queryParams.CancellationTime)}
-              where {SessionTable.Id} = @{nameof(queryParams.Id)}
-                and {SessionTable.RefreshTokenHash} = @{nameof(queryParams.RefreshTokenHash)}
+                set {SessionTable.CancellationTime} = @{nameof(queryParams.CancellationTime)},
+                    {SessionTable.UpdateTime} = @{nameof(queryParams.UpdateTime)}
+              where (@{nameof(queryParams.Id)} is null
+                    or {SessionTable.Id} = @{nameof(queryParams.Id)})
+                and (@{nameof(queryParams.RefreshTokenHash)} is null
+                    or {SessionTable.RefreshTokenHash} = @{nameof(queryParams.RefreshTokenHash)});
              """;
 
         var command = new CommandDefinition(

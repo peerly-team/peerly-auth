@@ -1,12 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Validation.Errors;
 using Peerly.Auth.Exceptions;
-using Peerly.Auth.Models.Sessions;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 
@@ -14,13 +13,13 @@ internal sealed class LogoutHandler : IQueryHandler<LogoutQuery, LogoutQueryResp
 {
     private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IHashService _hashService;
-    private readonly IClock _clock;
+    private readonly ILogoutHandlerMapper _mapper;
 
-    public LogoutHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService, IClock clock)
+    public LogoutHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService, ILogoutHandlerMapper mapper)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _hashService = hashService;
-        _clock = clock;
+        _mapper = mapper;
     }
 
     public async Task<LogoutQueryResponse> ExecuteAsync(LogoutQuery query, CancellationToken cancellationToken)
@@ -38,13 +37,9 @@ internal sealed class LogoutHandler : IQueryHandler<LogoutQuery, LogoutQueryResp
             throw new NotFoundException(SessionErrors.RefreshTokenForUserNotFound(query.RefreshToken));
         }
 
-        var sessionUpdateItem = new SessionUpdateItem
-        {
-            Id = session.Id,
-            RefreshTokenHash = session.RefreshTokenHash,
-            CancellationTime = _clock.GetCurrentTime()
-        };
-        _ = await unitOfWork.SessionRepository.UpdateAsync(sessionUpdateItem, cancellationToken);
+        var sessionFilter = LogoutHandlerMapper.ToSessionFilter(session);
+        var sessionUpdateItem = _mapper.ToSessionUpdateItem();
+        _ = await unitOfWork.SessionRepository.UpdateAsync(sessionFilter, sessionUpdateItem, cancellationToken);
 
         return new LogoutQueryResponse();
     }

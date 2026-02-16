@@ -41,8 +41,8 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
             return error!;
         }
 
-        // NOTE: высчитываем хеши перед открытием транзакции к БД, поскольку очень долгие и тяжелые операции
-        var emailVerificationToken = _tokenService.CreateEmailVerificationToken();
+        // NOTE: высчитываем хеши перед открытием транзакции к БД, поскольку очень тяжелые операции
+        var emailVerificationToken = _tokenService.CreateRefreshToken();
         var emailVerificationTokenHash = await _hashService.HashAsync(emailVerificationToken, cancellationToken);
         var passwordHash = await _hashService.HashAsync(command.Password, cancellationToken);
 

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Microsoft.Extensions.Options;
 using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
+using Peerly.Auth.ApplicationServices.Options;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Email;
 using Peerly.Auth.Models.Sessions;
@@ -9,16 +11,15 @@ using Peerly.Auth.Tools;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 
-internal class RegisterHandlerMapper : IRegisterHandlerMapper
+internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
 {
-    private const short EmailVerificationTokenValidityPeriodMinutes = 10;
-    private const short RefreshTokenPeriodDays = 14;
-
     private readonly IClock _clock;
+    private readonly ExpirationTimeOptions _options;
 
-    public RegisterHandlerMapper(IClock clock)
+    public RegisterHandlerMapper(IClock clock, IOptions<ExpirationTimeOptions> options)
     {
         _clock = clock;
+        _options = options.Value;
     }
 
     public static UserIdRole ToUserIdRole(UserId userId, IReadOnlyCollection<Role> roles)
@@ -61,7 +62,7 @@ internal class RegisterHandlerMapper : IRegisterHandlerMapper
             UserId = userId,
             TokenHash = emailVerificationTokenHash,
             CreationTime = currentTime,
-            ExpirationTime = currentTime.AddMinutes(EmailVerificationTokenValidityPeriodMinutes)
+            ExpirationTime = currentTime.AddMinutes(_options.EmailVerificationTokenValidityPeriodMinutes)
         };
     }
 
@@ -74,7 +75,7 @@ internal class RegisterHandlerMapper : IRegisterHandlerMapper
             UserId = userId,
             RefreshTokenHash = refreshTokenHash,
             ExpirationTime = currentTime,
-            CreationTime = currentTime.AddDays(RefreshTokenPeriodDays)
+            CreationTime = currentTime.AddDays(_options.RefreshTokenPeriodDays)
         };
     }
 }

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.ApplicationServices.Generators.AuthTokens.Abstractions;
+using Peerly.Auth.ApplicationServices.Options;
 using Peerly.Auth.ApplicationServices.Providers.AuthTokens.Abstractions;
 using Peerly.Auth.Models.User;
 
@@ -15,11 +17,13 @@ internal sealed class JwtGenerator : IJwtGenerator
 {
     private readonly IClock _clock;
     private readonly ISigningKeyProvider _signingKeyProvider;
+    private readonly ExpirationTimeOptions _options;
 
-    public JwtGenerator(IClock clock, ISigningKeyProvider signingKeyProvider)
+    public JwtGenerator(IClock clock, ISigningKeyProvider signingKeyProvider, IOptions<ExpirationTimeOptions> options)
     {
         _clock = clock;
         _signingKeyProvider = signingKeyProvider;
+        _options = options.Value;
     }
 
     public JwtSecurityToken Create(UserIdRole user)
@@ -42,7 +46,7 @@ internal sealed class JwtGenerator : IJwtGenerator
             audience: JwtSettings.Audience,
             claims: claims,
             notBefore: issuedAt.DateTime,
-            expires: issuedAt.AddMinutes(15).DateTime,
+            expires: issuedAt.AddMinutes(_options.AccessTokenPeriodMinutes).DateTime,
             signingCredentials: creds);
     }
 }
