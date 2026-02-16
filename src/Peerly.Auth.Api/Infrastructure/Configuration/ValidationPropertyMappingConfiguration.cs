@@ -1,4 +1,5 @@
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 using Peerly.Auth.V1;
 
@@ -21,6 +22,10 @@ public static class ValidationPropertyMappingConfiguration
 
         ValidationPropertyMapping
             .AddMapping<RegisterCommand, V1RegisterRequest>()
+            .Build();
+
+        ValidationPropertyMapping
+            .AddMapping<RefreshCommand, V1RefreshRequest>()
             .Build();
     }
 }

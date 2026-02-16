@@ -5,6 +5,7 @@ create table users
     id            bigserial primary key not null,
     email         text                  not null,
     password_hash text                  not null,
+    role          text                  not null,
     name          text,
     creation_time timestamptz           not null,
     update_time   timestamptz

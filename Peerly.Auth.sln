@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{6698CE
 		Directory.Build.targets = Directory.Build.targets
 		.editorconfig = .editorconfig
 		src\Peerly.Auth.Persistence\Migrations\local_migrate.sh = src\Peerly.Auth.Persistence\Migrations\local_migrate.sh
+		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Tools", "src\Peerly.Auth.Tools\Peerly.Auth.Tools.csproj", "{747BCB11-D59B-40B1-BF3B-ABCEE1196362}"

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -29,14 +28,14 @@ internal sealed class JwtGenerator : IJwtGenerator
     public JwtSecurityToken Create(UserIdRole user)
     {
         var issuedAt = _clock.GetCurrentTime();
-        var jwtId = Guid.NewGuid(); // todo: нужно сохранить в БД
+        var jwtId = Guid.NewGuid();
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // кому принадлежит (постоянное значение)
             new(JwtRegisteredClaimNames.Jti, jwtId.ToString()), // идентификатор JWT
-            new(JwtRegisteredClaimNames.Iat, issuedAt.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64) // время выдачи токена
+            new(JwtRegisteredClaimNames.Iat, issuedAt.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64), // время выдачи токена
+            new("role", user.Role.ToString())
         };
-        claims.AddRange(user.Roles.Select(role => new Claim(JwtSettings.Roles, role.ToString())));
 
         var rsaKeys = _signingKeyProvider.GetActiveRsaPrivateKey();
         var creds = new SigningCredentials(rsaKeys, JwtSettings.Algorithm);
@@ -45,8 +44,8 @@ internal sealed class JwtGenerator : IJwtGenerator
             issuer: JwtSettings.Issuer,
             audience: JwtSettings.Audience,
             claims: claims,
-            notBefore: issuedAt.DateTime,
-            expires: issuedAt.AddMinutes(_options.AccessTokenPeriodMinutes).DateTime,
+            notBefore: issuedAt.UtcDateTime,
+            expires: issuedAt.AddMinutes(_options.AccessTokenPeriodMinutes).UtcDateTime,
             signingCredentials: creds);
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.Models.User;
 
@@ -9,5 +8,5 @@ public sealed record RegisterCommand : ICommand<RegisterCommandResponse>
     public required string Email { get; init; }
     public required string Password { get; init; }
     public required string UserName { get; init; }
-    public required IReadOnlyCollection<Role> Roles { get; init; }
+    public required Role Role { get; init; }
 }

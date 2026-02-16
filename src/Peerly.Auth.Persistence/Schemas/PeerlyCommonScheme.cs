@@ -10,18 +10,9 @@ internal static class PeerlyCommonScheme
         public const string Email = "email";
         public const string PasswordHash = "password_hash";
         public const string Name = "name";
+        public const string Role = "role";
         public const string CreationTime = "creation_time";
         public const string UpdateTime = "update_time";
-    }
-
-    public static class UserRoleTable
-    {
-        public const string TableName = "user_roles";
-
-        public const string Id = "id";
-        public const string UserId = "user_id";
-        public const string RoleId = "role_id";
-        public const string CreationTime = "creation_time";
     }
 
     public static class EmailVerificationTable

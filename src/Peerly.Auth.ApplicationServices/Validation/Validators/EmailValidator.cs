@@ -6,6 +6,6 @@ internal static class EmailValidator
 {
     public static bool IsValid(string email)
     {
-        return !string.IsNullOrWhiteSpace(email) || new EmailAddressAttribute().IsValid(email);
+        return !string.IsNullOrWhiteSpace(email) && new EmailAddressAttribute().IsValid(email);
     }
 }

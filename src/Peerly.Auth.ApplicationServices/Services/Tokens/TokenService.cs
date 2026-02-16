@@ -27,7 +27,7 @@ internal sealed class TokenService : ITokenService
         };
     }
 
-    public string CreateAccessToken(User user)
+    public string CreateAccessToken(UserIdRole user)
     {
         var jwt = _jwtGenerator.Create(user);
 

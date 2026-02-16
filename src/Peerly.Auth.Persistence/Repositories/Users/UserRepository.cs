@@ -26,6 +26,7 @@ internal sealed class UserRepository : IUserRepository
             item.Email,
             item.PasswordHash,
             item.Name,
+            Role = item.Role.ToString(),
             item.CreationTime
         };
 
@@ -35,11 +36,13 @@ internal sealed class UserRepository : IUserRepository
                          {UserTable.Email},
                          {UserTable.PasswordHash},
                          {UserTable.Name},
+                         {UserTable.Role},
                          {UserTable.CreationTime})
                   values (
                          @{nameof(queryParams.Email)},
                          @{nameof(queryParams.PasswordHash)},
                          @{nameof(queryParams.Name)},
+                         @{nameof(queryParams.Role)},
                          @{nameof(queryParams.CreationTime)})
                returning {UserTable.Id};
              """;
@@ -54,6 +57,31 @@ internal sealed class UserRepository : IUserRepository
         return new UserId(id);
     }
 
+    public async Task<UserIdRole?> GetRoleAsync(UserId userId, CancellationToken cancellationToken)
+    {
+        var queryParams = new
+        {
+            UserId = (long)userId
+        };
+
+        const string Query =
+            $"""
+             select {UserTable.Id},
+                    {UserTable.Role}
+               from {UserTable.TableName}
+              where {UserTable.Id} = @{nameof(queryParams.UserId)};
+             """;
+
+        var command = new CommandDefinition(
+            commandText: Query,
+            parameters: queryParams,
+            transaction: _connectionContext.Transaction,
+            cancellationToken: cancellationToken);
+        var userIdRoleDb = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserIdRoleDb>(command);
+
+        return userIdRoleDb.ToUserIdRole();
+    }
+
     public async Task<User?> GetAsync(string email, CancellationToken cancellationToken)
     {
         var queryParams = new
@@ -63,12 +91,11 @@ internal sealed class UserRepository : IUserRepository
 
         const string Query =
             $"""
-             select u.{UserTable.Id},
-                    u.{UserTable.PasswordHash},
-                    ur.{UserRoleTable.RoleId}
-               from {UserTable.TableName} u
-               join {UserRoleTable.TableName} ur on ur.{UserRoleTable.UserId} = u.{UserTable.Id}
-              where u.{UserTable.Email} = @{nameof(queryParams.Email)};
+             select {UserTable.Id},
+                    {UserTable.PasswordHash},
+                    {UserTable.Role}
+               from {UserTable.TableName}
+              where {UserTable.Email} = @{nameof(queryParams.Email)};
              """;
 
         var command = new CommandDefinition(
@@ -76,9 +103,9 @@ internal sealed class UserRepository : IUserRepository
             parameters: queryParams,
             transaction: _connectionContext.Transaction,
             cancellationToken: cancellationToken);
-        var usersDb = await _connectionContext.Connection.QueryAsync<UserDb>(command);
+        var userDb = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserDb>(command);
 
-        return usersDb.ToUser();
+        return userDb.ToUser();
     }
 
     public async Task<bool> ExistsAsync(string email, CancellationToken cancellationToken)

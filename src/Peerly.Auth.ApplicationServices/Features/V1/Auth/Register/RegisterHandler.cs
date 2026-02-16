@@ -51,13 +51,10 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var userAddItem = _mapper.ToUserAddItem(command, passwordHash);
         var userId = await unitOfWork.UserRepository.AddAsync(userAddItem, cancellationToken);
 
-        var userRoleAddItems = _mapper.ToUserRoleAddItems(userId, command.Roles);
-        _ = await unitOfWork.UserRoleRepository.BatchAddAsync(userRoleAddItems, cancellationToken);
-
         var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationTokenHash);
         _ = await unitOfWork.EmailVerificationRepository.AddAsync(emailVerificationAddItem, cancellationToken);
 
-        var user = RegisterHandlerMapper.ToUserIdRole(userId, command.Roles);
+        var user = RegisterHandlerMapper.ToUserIdRole(userId, command.Role);
         var authToken = _tokenService.CreateAuthToken(user);
 
         var refreshTokenHash = await _hashService.HashAsync(authToken.RefreshToken, cancellationToken);

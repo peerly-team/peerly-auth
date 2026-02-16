@@ -55,4 +55,3 @@ internal sealed class TransactionToken : IOperationSet
             throw new ObjectDisposedException(nameof(TransactionToken));
     }
 }
-

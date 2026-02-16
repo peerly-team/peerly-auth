@@ -3,12 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Auth;
 using Peerly.Auth.Models.User;
-using Peerly.Auth.Tools;
 using Proto = Peerly.Auth.V1;
 
 namespace Peerly.Auth.Api.Controllers.Auth;
@@ -23,7 +23,7 @@ internal static class AuthMappingExtensions
             Email = requestProto.Email,
             Password = requestProto.Password,
             UserName = requestProto.UserName,
-            Roles = requestProto.Roles.ToArrayBy(role => role.ToModel())
+            Role = requestProto.Role.ToModel()
         };
     }
 
@@ -88,6 +88,34 @@ internal static class AuthMappingExtensions
     public static Proto.V1LogoutResponse ToV1LogoutResponse(this LogoutQueryResponse _)
     {
         return new Proto.V1LogoutResponse();
+    }
+
+    public static RefreshCommand ToRefreshCommand(this Proto.V1RefreshRequest requestProto)
+    {
+        return new RefreshCommand
+        {
+            UserId = new UserId(requestProto.UserId),
+            RefreshToken = requestProto.RefreshToken
+        };
+    }
+
+    public static Proto.V1RefreshResponse ToV1RefreshResponse(this CommandResponse<RefreshCommandResponse> commandResponse)
+    {
+        return commandResponse.Match(
+            success => new Proto.V1RefreshResponse { SuccessResponse = ToSuccessResponse(success) },
+            validationError => new Proto.V1RefreshResponse
+            {
+                ValidationError = validationError.ToProto<RefreshCommand, Proto.V1RefreshRequest>()
+            },
+            otherError => new Proto.V1RefreshResponse { OtherError = otherError.ToProto() });
+
+        static Proto.V1RefreshResponse.Types.Success ToSuccessResponse(RefreshCommandResponse commandSuccess)
+        {
+            return new Proto.V1RefreshResponse.Types.Success
+            {
+                Token = commandSuccess.AuthToken.ToTokenProto()
+            };
+        }
     }
 
     public static GetJwksQuery ToGetJwksQuery(this Proto.V1GetJwksRequest _)

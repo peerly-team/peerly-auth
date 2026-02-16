@@ -12,6 +12,7 @@ public interface IUserRepository : IReadOnlyUserRepository
 
 public interface IReadOnlyUserRepository
 {
+    Task<UserIdRole?> GetRoleAsync(UserId userId, CancellationToken cancellationToken);
     Task<User?> GetAsync(string email, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(string email, CancellationToken cancellationToken);
 }

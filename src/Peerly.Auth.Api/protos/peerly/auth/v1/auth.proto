@@ -10,7 +10,7 @@ service AuthService {
   rpc V1Register(V1RegisterRequest) returns (V1RegisterResponse);
   rpc V1Login(V1LoginRequest) returns (V1LoginResponse);
   rpc V1Logout(V1LogoutRequest) returns (V1LogoutResponse);
-  rpc V1RefreshToken(V1RefreshTokenRequest) returns (V1RefreshTokenResponse);
+  rpc V1Refresh(V1RefreshRequest) returns (V1RefreshResponse);
   rpc V1GetJwks(V1GetJwksRequest) returns (V1GetJwksResponse);
 }
 
@@ -18,7 +18,7 @@ message V1RegisterRequest {
   string email = 1;
   string password = 2;
   string user_name = 3;
-  repeated Role roles = 4;
+  Role role = 4;
 }
 
 message V1RegisterResponse {
@@ -59,11 +59,12 @@ message V1LogoutRequest {
 
 message V1LogoutResponse {}
 
-message V1RefreshTokenRequest {
-  string refresh_token = 1;
+message V1RefreshRequest {
+  int64 user_id = 1;
+  string refresh_token = 2;
 }
 
-message V1RefreshTokenResponse {
+message V1RefreshResponse {
   oneof response {
     Success success_response = 1;
     ValidationError validation_error = 2;
