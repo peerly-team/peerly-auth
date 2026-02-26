@@ -57,7 +57,15 @@ message V1LogoutRequest {
   string refresh_token = 2;
 }
 
-message V1LogoutResponse {}
+message V1LogoutResponse {
+  oneof response {
+    Success success_response = 1;
+    ValidationError validation_error = 2;
+    OtherError other_error = 3;
+  }
+
+  message Success {}
+}
 
 message V1RefreshRequest {
   int64 user_id = 1;

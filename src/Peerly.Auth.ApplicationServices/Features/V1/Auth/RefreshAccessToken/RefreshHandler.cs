@@ -33,12 +33,12 @@ internal sealed class RefreshHandler : ICommandHandler<RefreshCommand, RefreshCo
         var session = await readOnlyUnitOfWork.ReadOnlySessionRepository.GetAsync(command.UserId, cancellationToken);
         if (session is null)
         {
-            return ValidationError.From(SessionErrors.ActiveSessionForUserNotFound);
+            return ValidationError.From(SessionErrors.ActiveSessionForUserNotFound(command.UserId));
         }
 
         if (!_hashService.Verify(command.RefreshToken, session.RefreshTokenHash))
         {
-            return ValidationError.From(SessionErrors.RefreshTokenForUserNotFound(command.RefreshToken));
+            return ValidationError.From(SessionErrors.RefreshTokenForUserNotFound(command.RefreshToken, command.UserId));
         }
 
         var userIdRole = await readOnlyUnitOfWork.ReadOnlyUserRepository.GetRoleAsync(command.UserId, cancellationToken);

@@ -1,15 +1,16 @@
 using System.Threading;
 using System.Threading.Tasks;
+using OneOf.Types;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout.Abstractions;
+using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Validation.Errors;
-using Peerly.Auth.Exceptions;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 
-internal sealed class LogoutHandler : IQueryHandler<LogoutQuery, LogoutQueryResponse>
+internal sealed class LogoutHandler : ICommandHandler<LogoutCommand, Success>
 {
     private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IHashService _hashService;
@@ -22,25 +23,25 @@ internal sealed class LogoutHandler : IQueryHandler<LogoutQuery, LogoutQueryResp
         _mapper = mapper;
     }
 
-    public async Task<LogoutQueryResponse> ExecuteAsync(LogoutQuery query, CancellationToken cancellationToken)
+    public async Task<CommandResponse<Success>> ExecuteAsync(LogoutCommand command, CancellationToken cancellationToken)
     {
         var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
-        var session = await unitOfWork.SessionRepository.GetAsync(query.UserId, cancellationToken);
+        var session = await unitOfWork.SessionRepository.GetAsync(command.UserId, cancellationToken);
         if (session is null)
         {
-            throw new NotFoundException(SessionErrors.ActiveSessionForUserNotFound);
+            return ValidationError.From(SessionErrors.ActiveSessionForUserNotFound(command.UserId));
         }
 
-        if (!_hashService.Verify(query.RefreshToken, session.RefreshTokenHash))
+        if (!_hashService.Verify(command.RefreshToken, session.RefreshTokenHash))
         {
-            throw new NotFoundException(SessionErrors.RefreshTokenForUserNotFound(query.RefreshToken));
+            return ValidationError.From(SessionErrors.RefreshTokenForUserNotFound(command.RefreshToken, command.UserId));
         }
 
         var sessionFilter = LogoutHandlerMapper.ToSessionFilter(session);
         var sessionUpdateItem = _mapper.ToSessionUpdateItem();
         _ = await unitOfWork.SessionRepository.UpdateAsync(sessionFilter, sessionUpdateItem, cancellationToken);
 
-        return new LogoutQueryResponse();
+        return new Success();
     }
 }

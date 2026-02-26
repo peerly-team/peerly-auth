@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Grpc.Core;
+using OneOf.Types;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
@@ -17,14 +18,14 @@ public sealed class AuthController : AuthService.AuthServiceBase
     private readonly ICommandHandler<LoginCommand, LoginCommandResponse> _loginHandler;
     private readonly IQueryHandler<GetJwksQuery, GetJwksQueryResponse> _getJwksHandler;
     private readonly ICommandHandler<RegisterCommand, RegisterCommandResponse> _registerHandler;
-    private readonly IQueryHandler<LogoutQuery, LogoutQueryResponse> _logoutHandler;
+    private readonly ICommandHandler<LogoutCommand, Success> _logoutHandler;
     private readonly ICommandHandler<RefreshCommand, RefreshCommandResponse> _refreshHandler;
 
     public AuthController(
         ICommandHandler<LoginCommand, LoginCommandResponse> loginHandler,
         IQueryHandler<GetJwksQuery, GetJwksQueryResponse> getJwksHandler,
         ICommandHandler<RegisterCommand, RegisterCommandResponse> registerHandler,
-        IQueryHandler<LogoutQuery, LogoutQueryResponse> logoutHandler,
+        ICommandHandler<LogoutCommand, Success> logoutHandler,
         ICommandHandler<RefreshCommand, RefreshCommandResponse> refreshHandler)
     {
         _loginHandler = loginHandler;

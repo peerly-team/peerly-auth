@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using OneOf.Types;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
@@ -76,18 +77,24 @@ internal static class AuthMappingExtensions
         }
     }
 
-    public static LogoutQuery ToLogoutQuery(this Proto.V1LogoutRequest requestProto)
+    public static LogoutCommand ToLogoutQuery(this Proto.V1LogoutRequest requestProto)
     {
-        return new LogoutQuery
+        return new LogoutCommand
         {
             UserId = new UserId(requestProto.UserId),
             RefreshToken = requestProto.RefreshToken
         };
     }
 
-    public static Proto.V1LogoutResponse ToV1LogoutResponse(this LogoutQueryResponse _)
+    public static Proto.V1LogoutResponse ToV1LogoutResponse(this CommandResponse<Success> commandResponse)
     {
-        return new Proto.V1LogoutResponse();
+        return commandResponse.Match(
+            _ => new Proto.V1LogoutResponse { SuccessResponse = new Proto.V1LogoutResponse.Types.Success() },
+            validationError => new Proto.V1LogoutResponse
+            {
+                ValidationError = validationError.ToProto<LogoutCommand, Proto.V1LogoutRequest>()
+            },
+            otherError => new Proto.V1LogoutResponse { OtherError = otherError.ToProto() });
     }
 
     public static RefreshCommand ToRefreshCommand(this Proto.V1RefreshRequest requestProto)
