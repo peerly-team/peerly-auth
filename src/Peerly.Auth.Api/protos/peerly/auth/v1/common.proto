@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package peerly.auth.v1;
+
+import "google/protobuf/wrappers.proto";
+
+option csharp_namespace = "Peerly.Auth.V1.Proto";
+
+message ValidationError {
+  map<string, ErrorMessagesCollection> errors = 1;
+  map<string, string> extensions = 2;
+  google.protobuf.StringValue error_detail = 3;
+
+  message ErrorMessagesCollection {
+    repeated string error_message = 1;
+  }
+}
+
+message OtherError {
+  ErrorType type = 1;
+  google.protobuf.StringValue message = 2;
+
+  enum ErrorType {
+    ERROR_TYPE_UNSPECIFIED = 0;
+    ERROR_TYPE_PERMISSION_DENIED = 1;
+    ERROR_TYPE_NOT_FOUND = 2;
+    ERROR_TYPE_CONFLICT = 3;
+  }
+}
+
+message Token {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+enum Role {
+  ROLE_UNKNOWN = 0;
+  ROLE_ADMIN = 1;
+  ROLE_TEACHER = 2;
+  ROLE_STUDENT = 3;
+}
