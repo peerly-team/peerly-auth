@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore"/>
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Peerly.Auth.Api\Peerly.Auth.Api.csproj" />
+    <ProjectReference Include="..\Peerly.Auth.Persistence\Peerly.Auth.Persistence.csproj" />
+  </ItemGroup>
+</Project>

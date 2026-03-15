@@ -1,0 +1,10 @@
+version: v2
+modules:
+  - path: src/Peerly.Auth.Api/protos
+    name: buf.build/peerly/peerly-auth
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

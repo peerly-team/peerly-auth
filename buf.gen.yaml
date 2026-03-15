@@ -1,0 +1,16 @@
+version: v2
+clean: true
+managed:
+  enabled: true
+plugins:
+  - remote: buf.build/protocolbuffers/csharp:v33.4
+    out: src/Peerly.Auth.Api/obj/buf.protogen
+    opt:
+      - file_extension=.g.cs
+  - remote: buf.build/grpc/csharp:v1.76.0
+    out: src/Peerly.Auth.Api/obj/buf.protogen
+    opt:
+      - no_client
+      - file_suffix=Grpc.g.cs
+inputs:
+  - directory: src/Peerly.Auth.Api/protos

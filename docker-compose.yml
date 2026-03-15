@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  peerly-auth-database:
+    image: postgres:latest
+    ports:
+      - 54320:5432
+    environment:
+      POSTGRES_USER: peerly-auth-user
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: peerly-auth
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: -c log_statement=all

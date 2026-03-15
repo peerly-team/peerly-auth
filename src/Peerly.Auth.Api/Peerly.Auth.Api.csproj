@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="obj\buf.protogen\**\*.cs">
+      <Visible>false</Visible>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Third-party packages -->
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Peerly.Auth.ApplicationServices\Peerly.Auth.ApplicationServices.csproj" />
+    <ProjectReference Include="..\Peerly.Auth.Tools\Peerly.Auth.Tools.csproj" />
+  </ItemGroup>
+</Project>
