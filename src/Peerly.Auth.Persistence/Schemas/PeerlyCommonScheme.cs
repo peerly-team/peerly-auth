@@ -21,10 +21,14 @@ internal static class PeerlyCommonScheme
 
         public const string Id = "id";
         public const string UserId = "user_id";
-        public const string TokenHash = "token_hash";
-        public const string CreationTime = "creation_time";
+        public const string Token = "token";
         public const string ExpirationTime = "expiration_time";
-        public const string VerificationTime = "expiration_time";
+        public const string VerificationTime = "verification_time";
+        public const string ProcessStatus = "process_status";
+        public const string TakenTime = "taken_time";
+        public const string FailCount = "fail_count";
+        public const string Error = "error";
+        public const string CreationTime = "creation_time";
         public const string UpdateTime = "update_time";
     }
 

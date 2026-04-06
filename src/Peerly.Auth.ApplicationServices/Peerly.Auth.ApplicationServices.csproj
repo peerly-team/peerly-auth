@@ -7,5 +7,8 @@
     <PackageReference Include="Devolutions.Zxcvbn" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="MailKit"/>
+    <PackageReference Include="Quartz"/>
+    <PackageReference Include="Quartz.Extensions.Hosting"/>
   </ItemGroup>
 </Project>

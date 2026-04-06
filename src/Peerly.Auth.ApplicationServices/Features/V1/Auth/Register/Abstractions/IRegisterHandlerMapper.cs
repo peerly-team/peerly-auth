@@ -9,7 +9,7 @@ namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions
 internal interface IRegisterHandlerMapper
 {
     UserAddItem ToUserAddItem(RegisterCommand command, string passwordHash);
-    EmailVerificationAddItem ToEmailVerificationAddItem(UserId userId, string emailVerificationTokenHash);
+    EmailVerificationAddItem ToEmailVerificationAddItem(UserId userId, string emailVerificationToken);
     SessionAddItem ToSessionAddItem(UserId userId, string refreshTokenHash);
     OutboxMessageAddItem ToOutboxMessage(UserId userId, RegisterCommand command);
 }
