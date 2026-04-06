@@ -40,4 +40,19 @@ internal static class PeerlyCommonScheme
         public const string CancellationTime = "cancellation_time";
         public const string UpdateTime = "update_time";
     }
+
+    public static class OutboxMessageTable
+    {
+        public const string TableName = "outbox_messages";
+
+        public const string Id = "id";
+        public const string EventType = "event_type";
+        public const string Topic = "topic";
+        public const string Key = "key";
+        public const string Payload = "payload";
+        public const string CreationTime = "creation_time";
+        public const string ProcessedTime = "processed_time";
+        public const string FailCount = "fail_count";
+        public const string Error = "error";
+    }
 }

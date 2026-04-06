@@ -1,9 +1,13 @@
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
+using Peerly.Auth.ApplicationServices.Models.Events;
 using Peerly.Auth.ApplicationServices.Options;
+using Peerly.Auth.Constants;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Email;
+using Peerly.Auth.Models.Outbox;
 using Peerly.Auth.Models.Sessions;
 using Peerly.Auth.Models.User;
 
@@ -41,16 +45,6 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
         };
     }
 
-    public UserRoleAddItem ToUserRoleAddItem(UserId userId, Role role)
-    {
-        return new UserRoleAddItem
-        {
-            UserId = userId,
-            Role = role,
-            CreationTime = _clock.GetCurrentTime()
-        };
-    }
-
     public EmailVerificationAddItem ToEmailVerificationAddItem(UserId userId, string emailVerificationTokenHash)
     {
         var currentTime = _clock.GetCurrentTime();
@@ -74,6 +68,27 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
             RefreshTokenHash = refreshTokenHash,
             ExpirationTime = currentTime,
             CreationTime = currentTime.AddDays(_options.RefreshTokenPeriodDays)
+        };
+    }
+
+    public OutboxMessageAddItem ToOutboxMessage(UserId userId, RegisterCommand command)
+    {
+        var registrationEvent = new UserRegistrationEvent
+        {
+            Id = (long)userId,
+            Role = (int)command.Role,
+            Email = command.Email,
+            Name = command.UserName,
+            Timestamp = _clock.GetCurrentTime()
+        };
+
+        return new OutboxMessageAddItem
+        {
+            EventType = nameof(UserRegistrationEvent),
+            Topic = KafkaTopics.UserRegistrationEvents,
+            Key = userId.ToString(),
+            Payload = JsonSerializer.Serialize(registrationEvent),
+            CreationTime = _clock.GetCurrentTime()
         };
     }
 }

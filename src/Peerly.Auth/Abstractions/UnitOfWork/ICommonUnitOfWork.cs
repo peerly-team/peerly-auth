@@ -7,6 +7,7 @@ public interface ICommonUnitOfWork : IUnitOfWork
     IUserRepository UserRepository { get; }
     IEmailVerificationRepository EmailVerificationRepository { get; }
     ISessionRepository SessionRepository { get; }
+    IOutboxRepository OutboxRepository { get; }
 }
 
 public interface ICommonReadOnlyUnitOfWork : IUnitOfWork

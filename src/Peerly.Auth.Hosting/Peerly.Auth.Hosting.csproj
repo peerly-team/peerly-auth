@@ -5,6 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Peerly.Auth.Api\Peerly.Auth.Api.csproj" />
+    <ProjectReference Include="..\Peerly.Auth.Messaging\Peerly.Auth.Messaging.csproj" />
     <ProjectReference Include="..\Peerly.Auth.Persistence\Peerly.Auth.Persistence.csproj" />
   </ItemGroup>
 </Project>
