@@ -26,11 +26,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{6698CE
 		.editorconfig = .editorconfig
 		src\Peerly.Auth.Persistence\Migrations\local_migrate.sh = src\Peerly.Auth.Persistence\Migrations\local_migrate.sh
 		docker-compose.yml = docker-compose.yml
+		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Tools", "src\Peerly.Auth.Tools\Peerly.Auth.Tools.csproj", "{747BCB11-D59B-40B1-BF3B-ABCEE1196362}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Hosting", "src\Peerly.Auth.Hosting\Peerly.Auth.Hosting.csproj", "{85F01B70-B8EA-4CE7-8DC7-588C318A4596}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Messaging", "src\Peerly.Auth.Messaging\Peerly.Auth.Messaging.csproj", "{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -126,6 +129,18 @@ Global
 		{85F01B70-B8EA-4CE7-8DC7-588C318A4596}.Release|x64.Build.0 = Release|Any CPU
 		{85F01B70-B8EA-4CE7-8DC7-588C318A4596}.Release|x86.ActiveCfg = Release|Any CPU
 		{85F01B70-B8EA-4CE7-8DC7-588C318A4596}.Release|x86.Build.0 = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|x64.Build.0 = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Debug|x86.Build.0 = Debug|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x64.ActiveCfg = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x64.Build.0 = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x86.ActiveCfg = Release|Any CPU
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,5 +153,6 @@ Global
 		{B053027F-9196-45B5-A3C5-CDAC744F3357} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{747BCB11-D59B-40B1-BF3B-ABCEE1196362} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{85F01B70-B8EA-4CE7-8DC7-588C318A4596} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

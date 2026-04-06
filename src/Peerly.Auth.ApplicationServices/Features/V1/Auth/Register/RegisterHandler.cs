@@ -61,7 +61,8 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var sessionAddItem = _mapper.ToSessionAddItem(userId, refreshTokenHash);
         _ = await unitOfWork.SessionRepository.AddAsync(sessionAddItem, cancellationToken);
 
-        // todo: отправить уведомление на почту
+        var outboxMessage = _mapper.ToOutboxMessage(userId, command);
+        _ = await unitOfWork.OutboxRepository.AddAsync(outboxMessage, cancellationToken);
 
         await setOperations.Complete(cancellationToken);
 

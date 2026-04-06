@@ -7,6 +7,7 @@ using Peerly.Auth.Api.Controllers.Auth;
 using Peerly.Auth.Api.Extensions;
 using Peerly.Auth.Api.Infrastructure.Configuration;
 using Peerly.Auth.ApplicationServices.Extensions;
+using Peerly.Auth.Messaging.Extensions;
 using Peerly.Auth.Persistence.Extensions;
 
 namespace Peerly.Auth.Hosting;
@@ -37,6 +38,9 @@ public static class Program
 
         // ApplicationServices
         services.ConfigureApplicationServices(configuration);
+
+        // Messaging
+        services.ConfigureMessaging(configuration);
 
         // Persistence
         services.ConfigurePersistence(configuration);
