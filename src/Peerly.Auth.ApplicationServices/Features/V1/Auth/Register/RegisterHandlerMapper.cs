@@ -6,6 +6,7 @@ using Peerly.Auth.ApplicationServices.Models.Events;
 using Peerly.Auth.ApplicationServices.Options;
 using Peerly.Auth.Constants;
 using Peerly.Auth.Identifiers;
+using Peerly.Auth.Models.BackgroundService;
 using Peerly.Auth.Models.Email;
 using Peerly.Auth.Models.Outbox;
 using Peerly.Auth.Models.Sessions;
@@ -45,14 +46,16 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
         };
     }
 
-    public EmailVerificationAddItem ToEmailVerificationAddItem(UserId userId, string emailVerificationTokenHash)
+    public EmailVerificationAddItem ToEmailVerificationAddItem(UserId userId, string emailVerificationToken)
     {
         var currentTime = _clock.GetCurrentTime();
 
         return new EmailVerificationAddItem
         {
             UserId = userId,
-            TokenHash = emailVerificationTokenHash,
+            Token = emailVerificationToken,
+            ProcessStatus = ProcessStatus.Created,
+            FailCount = 0,
             CreationTime = currentTime,
             ExpirationTime = currentTime.AddMinutes(_options.EmailVerificationTokenValidityPeriodMinutes)
         };
@@ -85,7 +88,7 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
         return new OutboxMessageAddItem
         {
             EventType = nameof(UserRegistrationEvent),
-            Topic = KafkaTopics.UserRegistrationEvents,
+            Topic = OutboxTopics.UserRegistrationEvents,
             Key = userId.ToString(),
             Payload = JsonSerializer.Serialize(registrationEvent),
             CreationTime = _clock.GetCurrentTime()

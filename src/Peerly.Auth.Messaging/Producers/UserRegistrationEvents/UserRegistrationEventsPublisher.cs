@@ -8,7 +8,7 @@ namespace Peerly.Auth.Messaging.Producers.UserRegistrationEvents;
 
 internal sealed class UserRegistrationEventsPublisher : TopicOutboxPublisher
 {
-    protected override string Topic => KafkaTopics.UserRegistrationEvents;
+    protected override string Topic => OutboxTopics.UserRegistrationEvents;
 
     public UserRegistrationEventsPublisher(
         ICommonUnitOfWorkFactory unitOfWorkFactory,

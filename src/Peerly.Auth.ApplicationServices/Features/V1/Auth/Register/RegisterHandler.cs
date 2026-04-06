@@ -41,9 +41,8 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
             return error!;
         }
 
-        // NOTE: высчитываем хеши перед открытием транзакции к БД, поскольку очень тяжелые операции
+        // NOTE: высчитываем хеш пароля перед открытием транзакции к БД, поскольку очень тяжелая операция
         var emailVerificationToken = _tokenService.CreateRefreshToken();
-        var emailVerificationTokenHash = await _hashService.HashAsync(emailVerificationToken, cancellationToken);
         var passwordHash = await _hashService.HashAsync(command.Password, cancellationToken);
 
         var setOperations = await unitOfWork.StartOperationSet(cancellationToken);
@@ -51,7 +50,7 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var userAddItem = _mapper.ToUserAddItem(command, passwordHash);
         var userId = await unitOfWork.UserRepository.AddAsync(userAddItem, cancellationToken);
 
-        var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationTokenHash);
+        var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationToken);
         _ = await unitOfWork.EmailVerificationRepository.AddAsync(emailVerificationAddItem, cancellationToken);
 
         var user = RegisterHandlerMapper.ToUserIdRole(userId, command.Role);
