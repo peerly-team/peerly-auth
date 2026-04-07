@@ -15,5 +15,5 @@ public interface IEmailVerificationRepository : IReadOnlyEmailVerificationReposi
 
 public interface IReadOnlyEmailVerificationRepository
 {
-
+    Task<EmailVerificationInfo?> GetByTokenAsync(string token, CancellationToken cancellationToken);
 }

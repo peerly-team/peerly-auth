@@ -6,6 +6,7 @@ using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.VerifyEmail;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Auth;
@@ -145,6 +146,25 @@ internal static class AuthMappingExtensions
             AccessToken = token.AccessToken,
             RefreshToken = token.RefreshToken
         };
+    }
+
+    public static VerifyEmailCommand ToVerifyEmailCommand(this Proto.V1VerifyEmailRequest requestProto)
+    {
+        return new VerifyEmailCommand
+        {
+            Token = requestProto.Token
+        };
+    }
+
+    public static Proto.V1VerifyEmailResponse ToV1VerifyEmailResponse(this CommandResponse<Success> commandResponse)
+    {
+        return commandResponse.Match(
+            _ => new Proto.V1VerifyEmailResponse { SuccessResponse = new Proto.V1VerifyEmailResponse.Types.Success() },
+            validationError => new Proto.V1VerifyEmailResponse
+            {
+                ValidationError = validationError.ToProto<VerifyEmailCommand, Proto.V1VerifyEmailRequest>()
+            },
+            otherError => new Proto.V1VerifyEmailResponse { OtherError = otherError.ToProto() });
     }
 
     private static Role ToModel(this Proto.Role roleProto)
