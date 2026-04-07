@@ -22,6 +22,30 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
         _connectionContext = connectionContext;
     }
 
+    public async Task<EmailVerificationInfo?> GetByTokenAsync(string token, CancellationToken cancellationToken)
+    {
+        var queryParams = new { Token = token };
+
+        const string Query =
+            $"""
+             select {EmailVerificationTable.Id},
+                    {EmailVerificationTable.ExpirationTime},
+                    {EmailVerificationTable.VerificationTime}
+               from {EmailVerificationTable.TableName}
+              where {EmailVerificationTable.Token} = @{nameof(queryParams.Token)}
+              limit 1;
+             """;
+
+        var command = new CommandDefinition(
+            commandText: Query,
+            parameters: queryParams,
+            transaction: _connectionContext.Transaction,
+            cancellationToken: cancellationToken);
+        var db = await _connectionContext.Connection.QueryFirstOrDefaultAsync<EmailVerificationInfoDb>(command);
+
+        return db?.ToModel();
+    }
+
     public async Task<bool> AddAsync(EmailVerificationAddItem item, CancellationToken cancellationToken)
     {
         var queryParams = new
@@ -142,7 +166,11 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
                     {EmailVerificationTable.Error} = case
                     when {configuration.GetFlagParamName(item => item.Error)}
                     then {configuration.GetParamName(item => item.Error)}
-                    else {EmailVerificationTable.Error} end
+                    else {EmailVerificationTable.Error} end,
+                    {EmailVerificationTable.VerificationTime} = case
+                    when {configuration.GetFlagParamName(item => item.VerificationTime)}
+                    then {configuration.GetParamName(item => item.VerificationTime)}::timestamptz
+                    else {EmailVerificationTable.VerificationTime} end
                from (select {EmailVerificationTable.Id}
                        from {EmailVerificationTable.TableName}
                       where {EmailVerificationTable.Id} = @{nameof(id)}

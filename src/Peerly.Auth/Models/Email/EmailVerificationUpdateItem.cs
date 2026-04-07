@@ -9,4 +9,5 @@ public sealed record EmailVerificationUpdateItem
     public required string Error { get; init; }
     public required bool IncrementFailCount { get; init; }
     public required DateTimeOffset ProcessedTime { get; init; }
+    public required DateTimeOffset VerificationTime { get; init; }
 }

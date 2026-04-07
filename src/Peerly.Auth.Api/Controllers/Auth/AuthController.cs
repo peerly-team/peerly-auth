@@ -8,6 +8,7 @@ using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.VerifyEmail;
 using Peerly.Auth.V1;
 
 namespace Peerly.Auth.Api.Controllers.Auth;
@@ -20,19 +21,22 @@ public sealed class AuthController : AuthService.AuthServiceBase
     private readonly ICommandHandler<RegisterCommand, RegisterCommandResponse> _registerHandler;
     private readonly ICommandHandler<LogoutCommand, Success> _logoutHandler;
     private readonly ICommandHandler<RefreshCommand, RefreshCommandResponse> _refreshHandler;
+    private readonly ICommandHandler<VerifyEmailCommand, Success> _verifyEmailHandler;
 
     public AuthController(
         ICommandHandler<LoginCommand, LoginCommandResponse> loginHandler,
         IQueryHandler<GetJwksQuery, GetJwksQueryResponse> getJwksHandler,
         ICommandHandler<RegisterCommand, RegisterCommandResponse> registerHandler,
         ICommandHandler<LogoutCommand, Success> logoutHandler,
-        ICommandHandler<RefreshCommand, RefreshCommandResponse> refreshHandler)
+        ICommandHandler<RefreshCommand, RefreshCommandResponse> refreshHandler,
+        ICommandHandler<VerifyEmailCommand, Success> verifyEmailHandler)
     {
         _loginHandler = loginHandler;
         _getJwksHandler = getJwksHandler;
         _registerHandler = registerHandler;
         _logoutHandler = logoutHandler;
         _refreshHandler = refreshHandler;
+        _verifyEmailHandler = verifyEmailHandler;
     }
 
     public override async Task<V1RegisterResponse> V1Register(V1RegisterRequest request, ServerCallContext context)
@@ -68,5 +72,12 @@ public sealed class AuthController : AuthService.AuthServiceBase
         var query = request.ToGetJwksQuery();
         var queryResponse = await _getJwksHandler.ExecuteAsync(query, context.CancellationToken);
         return queryResponse.ToV1GetJwksResponse();
+    }
+
+    public override async Task<V1VerifyEmailResponse> V1VerifyEmail(V1VerifyEmailRequest request, ServerCallContext context)
+    {
+        var command = request.ToVerifyEmailCommand();
+        var commandResponse = await _verifyEmailHandler.ExecuteAsync(command, context.CancellationToken);
+        return commandResponse.ToV1VerifyEmailResponse();
     }
 }
