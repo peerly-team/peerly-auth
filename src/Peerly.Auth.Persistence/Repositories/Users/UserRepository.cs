@@ -1,9 +1,11 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Peerly.Auth.Abstractions.Repositories;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.User;
+using Peerly.Auth.Persistence.Common;
 using Peerly.Auth.Persistence.Repositories.Users.Models;
 using Peerly.Auth.Persistence.UnitOfWork;
 using static Peerly.Auth.Persistence.Schemas.PeerlyCommonScheme;
@@ -25,8 +27,8 @@ internal sealed class UserRepository : IUserRepository
         {
             item.Email,
             item.PasswordHash,
-            item.Name,
-            Role = item.Role.ToString(),
+            Role = item.UserRole.ToString(),
+            item.IsConfirmed,
             item.CreationTime
         };
 
@@ -35,14 +37,14 @@ internal sealed class UserRepository : IUserRepository
              insert into {UserTable.TableName} (
                          {UserTable.Email},
                          {UserTable.PasswordHash},
-                         {UserTable.Name},
                          {UserTable.Role},
+                         {UserTable.IsConfirmed},
                          {UserTable.CreationTime})
                   values (
                          @{nameof(queryParams.Email)},
                          @{nameof(queryParams.PasswordHash)},
-                         @{nameof(queryParams.Name)},
                          @{nameof(queryParams.Role)},
+                         @{nameof(queryParams.IsConfirmed)},
                          @{nameof(queryParams.CreationTime)})
                returning {UserTable.Id};
              """;
@@ -57,7 +59,7 @@ internal sealed class UserRepository : IUserRepository
         return new UserId(id);
     }
 
-    public async Task<UserIdRole?> GetRoleAsync(UserId userId, CancellationToken cancellationToken)
+    public async Task<UserRole?> GetUserRoleAsync(UserId userId, CancellationToken cancellationToken)
     {
         var queryParams = new
         {
@@ -66,8 +68,7 @@ internal sealed class UserRepository : IUserRepository
 
         const string Query =
             $"""
-             select {UserTable.Id},
-                    {UserTable.Role}
+             select {UserTable.Role}
                from {UserTable.TableName}
               where {UserTable.Id} = @{nameof(queryParams.UserId)};
              """;
@@ -77,12 +78,12 @@ internal sealed class UserRepository : IUserRepository
             parameters: queryParams,
             transaction: _connectionContext.Transaction,
             cancellationToken: cancellationToken);
-        var userIdRoleDb = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserIdRoleDb>(command);
+        var db = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserRoleDb>(command);
 
-        return userIdRoleDb.ToUserIdRole();
+        return db?.ToUserRole();
     }
 
-    public async Task<User?> GetAsync(string email, CancellationToken cancellationToken)
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         var queryParams = new
         {
@@ -93,7 +94,8 @@ internal sealed class UserRepository : IUserRepository
             $"""
              select {UserTable.Id},
                     {UserTable.PasswordHash},
-                    {UserTable.Role}
+                    {UserTable.Role},
+                    {UserTable.IsConfirmed}
                from {UserTable.TableName}
               where {UserTable.Email} = @{nameof(queryParams.Email)};
              """;
@@ -103,9 +105,9 @@ internal sealed class UserRepository : IUserRepository
             parameters: queryParams,
             transaction: _connectionContext.Transaction,
             cancellationToken: cancellationToken);
-        var userDb = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserDb>(command);
+        var db = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserDb>(command);
 
-        return userDb.ToUser();
+        return db?.ToUser();
     }
 
     public async Task<bool> ExistsAsync(string email, CancellationToken cancellationToken)
@@ -131,4 +133,63 @@ internal sealed class UserRepository : IUserRepository
         return await _connectionContext.Connection.ExecuteScalarAsync<bool>(command);
     }
 
+    public async Task<bool> IsEmailConfirmedAsync(UserId userId, CancellationToken cancellationToken)
+    {
+        var queryParams = new
+        {
+            UserId = (long)userId
+        };
+
+        const string Query =
+            $"""
+             select {UserTable.IsConfirmed}
+               from {UserTable.TableName}
+              where {UserTable.Id} = @{nameof(queryParams.UserId)};
+             """;
+
+        var command = new CommandDefinition(
+            commandText: Query,
+            parameters: queryParams,
+            transaction: _connectionContext.Transaction,
+            cancellationToken: cancellationToken);
+
+        return await _connectionContext.Connection.ExecuteScalarAsync<bool>(command);
+    }
+
+    public async Task<bool> UpdateAsync(
+        UserId userId,
+        Action<IUpdateBuilder<UserUpdateItem>> configureUpdate,
+        CancellationToken cancellationToken)
+    {
+        var builder = new UpdateBuilder<UserUpdateItem>();
+        configureUpdate(builder);
+
+        var configuration = builder.Build();
+        var queryParams = configuration.GetQueryParams();
+        queryParams.Add($"@{nameof(userId)}", (long)userId);
+
+        var query =
+            $"""
+             update {UserTable.TableName} as new
+                set {UserTable.UpdateTime} = now(),
+                    {UserTable.IsConfirmed} = case
+                    when {configuration.GetFlagParamName(item => item.IsConfirmed)}
+                    then {configuration.GetParamName(item => item.IsConfirmed)}
+                    else {UserTable.IsConfirmed} end
+               from (select {UserTable.Id}
+                       from {UserTable.TableName}
+                      where {UserTable.Id} = @{nameof(userId)}
+                        for update) as old
+              where new.{UserTable.Id} = old.{UserTable.Id};
+             """;
+
+        var command = new CommandDefinition(
+            query,
+            queryParams,
+            _connectionContext.Transaction,
+            cancellationToken: cancellationToken);
+        var affectedRows = await _connectionContext.Connection.ExecuteAsync(command);
+
+        return affectedRows == 1;
+    }
 }

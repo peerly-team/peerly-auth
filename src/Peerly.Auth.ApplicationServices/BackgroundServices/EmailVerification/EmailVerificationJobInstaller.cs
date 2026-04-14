@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Options;
 using Peerly.Auth.ApplicationServices.Executors.Shared;
-using Peerly.Auth.Models.Email;
+using Peerly.Auth.Models.EmailVerifications;
 using Peerly.Auth.Tools.Abstractions;
 using Quartz;
 

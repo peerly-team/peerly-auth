@@ -41,13 +41,13 @@ internal sealed class RefreshHandler : ICommandHandler<RefreshCommand, RefreshCo
             return ValidationError.From(SessionErrors.RefreshTokenForUserNotFound(command.RefreshToken, command.UserId));
         }
 
-        var userIdRole = await readOnlyUnitOfWork.ReadOnlyUserRepository.GetRoleAsync(command.UserId, cancellationToken);
-        if (userIdRole is null)
+        var userRole = await readOnlyUnitOfWork.ReadOnlyUserRepository.GetUserRoleAsync(command.UserId, cancellationToken);
+        if (userRole is null)
         {
             throw new NotFoundException();
         }
 
-        var accessToken = _tokenService.CreateAccessToken(userIdRole);
+        var accessToken = _tokenService.CreateAccessToken(command.UserId, userRole.Value);
 
         return new RefreshCommandResponse
         {

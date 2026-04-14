@@ -7,7 +7,7 @@ using Peerly.Auth.ApplicationServices.Options;
 using Peerly.Auth.Constants;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.BackgroundService;
-using Peerly.Auth.Models.Email;
+using Peerly.Auth.Models.EmailVerifications;
 using Peerly.Auth.Models.Outbox;
 using Peerly.Auth.Models.Sessions;
 using Peerly.Auth.Models.User;
@@ -25,23 +25,14 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
         _options = options.Value;
     }
 
-    public static UserIdRole ToUserIdRole(UserId userId, Role role)
-    {
-        return new UserIdRole
-        {
-            Id = userId,
-            Role = role
-        };
-    }
-
     public UserAddItem ToUserAddItem(RegisterCommand command, string passwordHash)
     {
         return new UserAddItem
         {
             Email = command.Email,
             PasswordHash = passwordHash,
-            Name = command.UserName,
-            Role = command.Role,
+            UserRole = command.Role,
+            IsConfirmed = false,
             CreationTime = _clock.GetCurrentTime()
         };
     }
@@ -81,7 +72,7 @@ internal sealed class RegisterHandlerMapper : IRegisterHandlerMapper
             Id = (long)userId,
             Role = (int)command.Role,
             Email = command.Email,
-            Name = command.UserName,
+            Name = command.Name,
             Timestamp = _clock.GetCurrentTime()
         };
 

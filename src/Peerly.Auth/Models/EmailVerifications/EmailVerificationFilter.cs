@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Peerly.Auth.Models.BackgroundService;
 
-namespace Peerly.Auth.Models.Email;
+namespace Peerly.Auth.Models.EmailVerifications;
 
 public sealed record EmailVerificationFilter
 {

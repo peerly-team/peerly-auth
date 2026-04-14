@@ -1,5 +1,5 @@
 using Peerly.Auth.Identifiers;
-using Peerly.Auth.Models.Email;
+using Peerly.Auth.Models.EmailVerifications;
 using Peerly.Auth.Models.Outbox;
 using Peerly.Auth.Models.Sessions;
 using Peerly.Auth.Models.User;

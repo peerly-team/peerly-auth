@@ -9,8 +9,8 @@ internal static class PeerlyCommonScheme
         public const string Id = "id";
         public const string Email = "email";
         public const string PasswordHash = "password_hash";
-        public const string Name = "name";
         public const string Role = "role";
+        public const string IsConfirmed = "is_confirmed";
         public const string CreationTime = "creation_time";
         public const string UpdateTime = "update_time";
     }
@@ -19,11 +19,9 @@ internal static class PeerlyCommonScheme
     {
         public const string TableName = "email_verifications";
 
-        public const string Id = "id";
         public const string UserId = "user_id";
         public const string Token = "token";
         public const string ExpirationTime = "expiration_time";
-        public const string VerificationTime = "verification_time";
         public const string ProcessStatus = "process_status";
         public const string TakenTime = "taken_time";
         public const string FailCount = "fail_count";
