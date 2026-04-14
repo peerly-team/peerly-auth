@@ -91,7 +91,7 @@ internal sealed class EmailVerificationJobExecutor : IExecutor<EmailVerification
 
     private MimeMessage BuildMessage(EmailVerificationJobItem jobItem)
     {
-        var verificationLink = $"{_smtpOptions.VerificationBaseUrl}?token={jobItem.Token}";
+        var verificationLink = $"{_smtpOptions.VerificationBaseUrl}?Token={jobItem.Token}";
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_smtpOptions.SenderName, _smtpOptions.SenderEmail));

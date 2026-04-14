@@ -2,7 +2,7 @@ using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
-using Peerly.Auth.ApplicationServices.Features.V1.Auth.VerifyEmail;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
 using Peerly.Auth.V1;
 
 namespace Peerly.Auth.Api.Infrastructure.Configuration;
@@ -35,7 +35,7 @@ public static class ValidationPropertyMappingConfiguration
             .Build();
 
         ValidationPropertyMapping
-            .AddMapping<VerifyEmailCommand, V1VerifyEmailRequest>()
+            .AddMapping<ConfirmEmailCommand, V1ConfirmEmailRequest>()
             .Build();
     }
 }
