@@ -6,7 +6,7 @@ using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Options;
 using Peerly.Auth.Models.BackgroundService;
-using Peerly.Auth.Models.Email;
+using Peerly.Auth.Models.EmailVerifications;
 using Quartz;
 
 namespace Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification;

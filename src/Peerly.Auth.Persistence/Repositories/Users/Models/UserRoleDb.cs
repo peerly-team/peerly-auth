@@ -1,7 +1,6 @@
 namespace Peerly.Auth.Persistence.Repositories.Users.Models;
 
-internal sealed record UserIdRoleDb
+internal sealed record UserRoleDb
 {
-    public required long Id { get; init; }
     public required string Role { get; init; }
 }

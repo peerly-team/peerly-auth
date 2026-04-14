@@ -4,7 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Peerly.Auth.Abstractions.Repositories;
-using Peerly.Auth.Models.Email;
+using Peerly.Auth.Identifiers;
+using Peerly.Auth.Models.EmailVerifications;
 using Peerly.Auth.Persistence.Common;
 using Peerly.Auth.Persistence.Repositories.EmailVerifications.Models;
 using Peerly.Auth.Persistence.UnitOfWork;
@@ -22,18 +23,16 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
         _connectionContext = connectionContext;
     }
 
-    public async Task<EmailVerificationInfo?> GetByTokenAsync(string token, CancellationToken cancellationToken)
+    public async Task<UserExpirationTime?> GetUserExpirationTimeByTokenAsync(string token, CancellationToken cancellationToken)
     {
         var queryParams = new { Token = token };
 
         const string Query =
             $"""
-             select {EmailVerificationTable.Id},
-                    {EmailVerificationTable.ExpirationTime},
-                    {EmailVerificationTable.VerificationTime}
+             select {EmailVerificationTable.UserId},
+                    {EmailVerificationTable.ExpirationTime}
                from {EmailVerificationTable.TableName}
-              where {EmailVerificationTable.Token} = @{nameof(queryParams.Token)}
-              limit 1;
+              where {EmailVerificationTable.Token} = @{nameof(queryParams.Token)};
              """;
 
         var command = new CommandDefinition(
@@ -41,9 +40,9 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
             parameters: queryParams,
             transaction: _connectionContext.Transaction,
             cancellationToken: cancellationToken);
-        var db = await _connectionContext.Connection.QueryFirstOrDefaultAsync<EmailVerificationInfoDb>(command);
+        var db = await _connectionContext.Connection.QuerySingleOrDefaultAsync<UserExpirationTimeDb>(command);
 
-        return db?.ToModel();
+        return db?.ToUserExpirationTime();
     }
 
     public async Task<bool> AddAsync(EmailVerificationAddItem item, CancellationToken cancellationToken)
@@ -100,7 +99,7 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
 
         const string Query =
             $"""
-             with cte as (select {EmailVerificationTable.Id}
+             with cte as (select {EmailVerificationTable.UserId}
                             from {EmailVerificationTable.TableName}
                            where (cardinality(@{nameof(queryParams.ProcessStatuses)}) = 0
                                  or {EmailVerificationTable.ProcessStatus} = any(@{nameof(queryParams.ProcessStatuses)}))
@@ -109,25 +108,19 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
                              and (@{nameof(queryParams.ProcessTimeoutSeconds)} is null
                                  or {EmailVerificationTable.TakenTime} < now() - (@{nameof(queryParams.ProcessTimeoutSeconds)} || ' seconds')::interval
                                  or {EmailVerificationTable.TakenTime} is null)
-                           order by {EmailVerificationTable.Id}
+                           order by {EmailVerificationTable.UserId}
                              for update skip locked
-                           limit @{nameof(queryParams.Limit)}),
-             updated as (update {EmailVerificationTable.TableName} as ev
-                            set {EmailVerificationTable.ProcessStatus} = 'InProgress',
-                                {EmailVerificationTable.TakenTime} = now()
-                           from cte
-                          where ev.{EmailVerificationTable.Id} = cte.{EmailVerificationTable.Id}
-                      returning ev.{EmailVerificationTable.Id},
-                                ev.{EmailVerificationTable.UserId},
-                                ev.{EmailVerificationTable.Token},
-                                ev.{EmailVerificationTable.ExpirationTime})
-             select updated.{EmailVerificationTable.Id},
-                    updated.{EmailVerificationTable.Token},
-                    updated.{EmailVerificationTable.ExpirationTime},
-                    u.{UserTable.Email},
-                    u.{UserTable.Name}
-               from updated
-               join {UserTable.TableName} u on updated.{EmailVerificationTable.UserId} = u.{UserTable.Id};
+                           limit @{nameof(queryParams.Limit)})
+             update {EmailVerificationTable.TableName} as ev
+                set {EmailVerificationTable.ProcessStatus} = 'InProgress',
+                    {EmailVerificationTable.TakenTime} = now()
+               from cte
+               join {UserTable.TableName} u on cte.{EmailVerificationTable.UserId} = u.{UserTable.Id}
+              where ev.{EmailVerificationTable.UserId} = cte.{EmailVerificationTable.UserId}
+             returning ev.{EmailVerificationTable.UserId},
+                       ev.{EmailVerificationTable.Token},
+                       ev.{EmailVerificationTable.ExpirationTime},
+                       u.{UserTable.Email}
              """;
 
         var command = new CommandDefinition(
@@ -137,11 +130,11 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
             cancellationToken: cancellationToken);
         var dbs = await _connectionContext.Connection.QueryAsync<EmailVerificationJobItemDb>(command);
 
-        return dbs.ToArrayBy(db => db.ToJobItem());
+        return dbs.ToArrayBy(db => db.ToEmailVerificationJobItem());
     }
 
     public async Task<bool> UpdateAsync(
-        long id,
+        UserId userId,
         Action<IUpdateBuilder<EmailVerificationUpdateItem>> configureUpdate,
         CancellationToken cancellationToken)
     {
@@ -150,7 +143,7 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
 
         var configuration = builder.Build();
         var queryParams = configuration.GetQueryParams();
-        queryParams.Add($"@{nameof(id)}", id);
+        queryParams.Add($"@{nameof(userId)}", (long)userId);
 
         var query =
             $"""
@@ -166,16 +159,12 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
                     {EmailVerificationTable.Error} = case
                     when {configuration.GetFlagParamName(item => item.Error)}
                     then {configuration.GetParamName(item => item.Error)}
-                    else {EmailVerificationTable.Error} end,
-                    {EmailVerificationTable.VerificationTime} = case
-                    when {configuration.GetFlagParamName(item => item.VerificationTime)}
-                    then {configuration.GetParamName(item => item.VerificationTime)}::timestamptz
-                    else {EmailVerificationTable.VerificationTime} end
-               from (select {EmailVerificationTable.Id}
+                    else {EmailVerificationTable.Error} end
+               from (select {EmailVerificationTable.UserId}
                        from {EmailVerificationTable.TableName}
-                      where {EmailVerificationTable.Id} = @{nameof(id)}
+                      where {EmailVerificationTable.UserId} = @{nameof(userId)}
                         for update) as old
-              where new.{EmailVerificationTable.Id} = old.{EmailVerificationTable.Id};
+              where new.{EmailVerificationTable.UserId} = old.{EmailVerificationTable.UserId};
              """;
 
         var command = new CommandDefinition(

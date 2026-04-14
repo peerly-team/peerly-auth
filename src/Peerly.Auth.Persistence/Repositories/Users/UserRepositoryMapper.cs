@@ -7,32 +7,19 @@ namespace Peerly.Auth.Persistence.Repositories.Users;
 
 internal static class UserRepositoryMapper
 {
-    public static User? ToUser(this UserDb? userDb)
+    public static User ToUser(this UserDb db)
     {
-        if (userDb is null)
-        {
-            return null;
-        }
-
         return new User
         {
-            Id = new UserId(userDb.Id),
-            Role = Enum.Parse<Role>(userDb.Role),
-            PasswordHash = userDb.PasswordHash
+            Id = new UserId(db.Id),
+            Role = Enum.Parse<UserRole>(db.Role),
+            PasswordHash = db.PasswordHash,
+            IsConfirmed = db.IsConfirmed
         };
     }
 
-    public static UserIdRole? ToUserIdRole(this UserIdRoleDb? userIdRoleDb)
+    public static UserRole? ToUserRole(this UserRoleDb db)
     {
-        if (userIdRoleDb is null)
-        {
-            return null;
-        }
-
-        return new UserIdRole
-        {
-            Id = new UserId(userIdRoleDb.Id),
-            Role = Enum.Parse<Role>(userIdRoleDb.Role)
-        };
+        return Enum.Parse<UserRole>(db.Role);
     }
 }

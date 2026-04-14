@@ -24,14 +24,14 @@ internal sealed class VerifyEmailHandler : ICommandHandler<VerifyEmailCommand, S
     {
         await using var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
-        var verification = await unitOfWork.EmailVerificationRepository.GetByTokenAsync(command.Token, cancellationToken);
-
+        var verification = await unitOfWork.EmailVerificationRepository.GetUserExpirationTimeByTokenAsync(command.Token, cancellationToken);
         if (verification is null)
         {
             return OtherError.NotFound();
         }
 
-        if (verification.VerificationTime is not null)
+        var isConfirmed = await unitOfWork.UserRepository.IsEmailConfirmedAsync(verification.UserId, cancellationToken);
+        if (isConfirmed)
         {
             return new Success();
         }
@@ -41,9 +41,9 @@ internal sealed class VerifyEmailHandler : ICommandHandler<VerifyEmailCommand, S
             return ValidationError.From(EmailVerificationErrors.TokenExpired);
         }
 
-        await unitOfWork.EmailVerificationRepository.UpdateAsync(
-            verification.Id,
-            builder => builder.Set(item => item.VerificationTime, _clock.GetCurrentTime()),
+        await unitOfWork.UserRepository.UpdateAsync(
+            verification.UserId,
+            builder => builder.Set(item => item.IsConfirmed, true),
             cancellationToken);
 
         return new Success();

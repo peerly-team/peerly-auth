@@ -24,7 +24,7 @@ internal static class AuthMappingExtensions
         {
             Email = requestProto.Email,
             Password = requestProto.Password,
-            UserName = requestProto.UserName,
+            Name = requestProto.UserName,
             Role = requestProto.Role.ToModel()
         };
     }
@@ -167,13 +167,13 @@ internal static class AuthMappingExtensions
             otherError => new Proto.V1VerifyEmailResponse { OtherError = otherError.ToProto() });
     }
 
-    private static Role ToModel(this Proto.Role roleProto)
+    private static UserRole ToModel(this Proto.Role roleProto)
     {
         return roleProto switch
         {
-            Proto.Role.Admin => Role.Admin,
-            Proto.Role.Teacher => Role.Teacher,
-            Proto.Role.Student => Role.Student,
+            Proto.Role.Admin => UserRole.Admin,
+            Proto.Role.Teacher => UserRole.Teacher,
+            Proto.Role.Student => UserRole.Student,
             _ => throw new ArgumentOutOfRangeException(nameof(roleProto), roleProto, null)
         };
     }
