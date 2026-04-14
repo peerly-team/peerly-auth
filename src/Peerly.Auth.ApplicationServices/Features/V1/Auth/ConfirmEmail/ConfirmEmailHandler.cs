@@ -7,20 +7,20 @@ using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Validation.Errors;
 
-namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.VerifyEmail;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
 
-internal sealed class VerifyEmailHandler : ICommandHandler<VerifyEmailCommand, Success>
+internal sealed class ConfirmEmailHandler : ICommandHandler<ConfirmEmailCommand, Success>
 {
     private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IClock _clock;
 
-    public VerifyEmailHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IClock clock)
+    public ConfirmEmailHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IClock clock)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _clock = clock;
     }
 
-    public async Task<CommandResponse<Success>> ExecuteAsync(VerifyEmailCommand command, CancellationToken cancellationToken)
+    public async Task<CommandResponse<Success>> ExecuteAsync(ConfirmEmailCommand command, CancellationToken cancellationToken)
     {
         await using var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 

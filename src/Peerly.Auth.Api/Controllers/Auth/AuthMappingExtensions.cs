@@ -6,7 +6,7 @@ using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
-using Peerly.Auth.ApplicationServices.Features.V1.Auth.VerifyEmail;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Auth;
@@ -24,7 +24,7 @@ internal static class AuthMappingExtensions
         {
             Email = requestProto.Email,
             Password = requestProto.Password,
-            Name = requestProto.UserName,
+            Name = requestProto.Name,
             Role = requestProto.Role.ToModel()
         };
     }
@@ -148,23 +148,23 @@ internal static class AuthMappingExtensions
         };
     }
 
-    public static VerifyEmailCommand ToVerifyEmailCommand(this Proto.V1VerifyEmailRequest requestProto)
+    public static ConfirmEmailCommand ToConfirmEmailCommand(this Proto.V1ConfirmEmailRequest requestProto)
     {
-        return new VerifyEmailCommand
+        return new ConfirmEmailCommand
         {
             Token = requestProto.Token
         };
     }
 
-    public static Proto.V1VerifyEmailResponse ToV1VerifyEmailResponse(this CommandResponse<Success> commandResponse)
+    public static Proto.V1ConfirmEmailResponse ToV1ConfirmEmailResponse(this CommandResponse<Success> commandResponse)
     {
         return commandResponse.Match(
-            _ => new Proto.V1VerifyEmailResponse { SuccessResponse = new Proto.V1VerifyEmailResponse.Types.Success() },
-            validationError => new Proto.V1VerifyEmailResponse
+            _ => new Proto.V1ConfirmEmailResponse { SuccessResponse = new Proto.V1ConfirmEmailResponse.Types.Success() },
+            validationError => new Proto.V1ConfirmEmailResponse
             {
-                ValidationError = validationError.ToProto<VerifyEmailCommand, Proto.V1VerifyEmailRequest>()
+                ValidationError = validationError.ToProto<ConfirmEmailCommand, Proto.V1ConfirmEmailRequest>()
             },
-            otherError => new Proto.V1VerifyEmailResponse { OtherError = otherError.ToProto() });
+            otherError => new Proto.V1ConfirmEmailResponse { OtherError = otherError.ToProto() });
     }
 
     private static UserRole ToModel(this Proto.Role roleProto)
