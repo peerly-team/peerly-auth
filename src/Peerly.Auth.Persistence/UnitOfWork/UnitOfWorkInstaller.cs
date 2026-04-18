@@ -39,6 +39,7 @@ internal sealed class UnitOfWorkInstaller : IInstaller
                 Username = opt.UserName,
                 Password = opt.Password,
                 Pooling = true,
+                SslMode = opt.SslMode,
             };
 
             return NpgsqlDataSource.Create(csb.ConnectionString);

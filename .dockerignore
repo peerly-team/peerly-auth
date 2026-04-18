@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.vs
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/appsettings.Local.json
+tests
+docker-compose.yml
+README.md
+Peerly.Auth.sln
+Folder.DotSettings.user

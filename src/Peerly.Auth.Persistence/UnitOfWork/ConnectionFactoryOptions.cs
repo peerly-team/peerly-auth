@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace Peerly.Auth.Persistence.UnitOfWork;
 
 internal sealed class ConnectionFactoryOptions
@@ -9,4 +11,5 @@ internal sealed class ConnectionFactoryOptions
     public required string Database { get; init; }
     public required string UserName { get; init; }
     public required string Password { get; init; }
+    public required SslMode SslMode { get; init; }
 }
