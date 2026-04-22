@@ -8,6 +8,7 @@ using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.ApplicationServices.Generators.AuthTokens.Abstractions;
 using Peerly.Auth.ApplicationServices.Options;
 using Peerly.Auth.ApplicationServices.Providers.AuthTokens.Abstractions;
+using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.User;
 
 namespace Peerly.Auth.ApplicationServices.Generators.AuthTokens;
@@ -25,16 +26,16 @@ internal sealed class JwtGenerator : IJwtGenerator
         _options = options.Value;
     }
 
-    public JwtSecurityToken Create(UserIdRole user)
+    public JwtSecurityToken Create(UserId userId, UserRole userRole)
     {
         var issuedAt = _clock.GetCurrentTime();
         var jwtId = Guid.NewGuid();
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // кому принадлежит (постоянное значение)
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()), // кому принадлежит (постоянное значение)
             new(JwtRegisteredClaimNames.Jti, jwtId.ToString()), // идентификатор JWT
             new(JwtRegisteredClaimNames.Iat, issuedAt.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64), // время выдачи токена
-            new("role", user.Role.ToString())
+            new("role", userRole.ToString())
         };
 
         var rsaKeys = _signingKeyProvider.GetActiveRsaPrivateKey();

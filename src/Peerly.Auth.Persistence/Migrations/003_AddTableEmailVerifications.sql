@@ -2,13 +2,15 @@
 -- +goose StatementBegin
 create table email_verifications
 (
-    id                bigserial primary key not null,
-    user_id           bigint                not null,
-    token_hash        text                  not null,
-    expiration_time   timestamptz           not null,
-    verification_time timestamptz,
-    creation_time     timestamptz           not null,
-    update_time       timestamptz
+    user_id         bigint primary key not null,
+    token           text               not null,
+    expiration_time timestamptz        not null,
+    process_status  text               not null,
+    taken_time      timestamptz,
+    fail_count      integer            not null,
+    error           text,
+    creation_time   timestamptz        not null,
+    update_time     timestamptz
 );
 -- +goose StatementEnd
 

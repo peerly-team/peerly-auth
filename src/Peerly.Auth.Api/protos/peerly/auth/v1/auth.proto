@@ -12,12 +12,13 @@ service AuthService {
   rpc V1Logout(V1LogoutRequest) returns (V1LogoutResponse);
   rpc V1Refresh(V1RefreshRequest) returns (V1RefreshResponse);
   rpc V1GetJwks(V1GetJwksRequest) returns (V1GetJwksResponse);
+  rpc V1ConfirmEmail(V1ConfirmEmailRequest) returns (V1ConfirmEmailResponse);
 }
 
 message V1RegisterRequest {
   string email = 1;
   string password = 2;
-  string user_name = 3;
+  string name = 3;
   Role role = 4;
 }
 
@@ -90,4 +91,18 @@ message V1GetJwksRequest {
 
 message V1GetJwksResponse {
   repeated string jwks = 1;
+}
+
+message V1ConfirmEmailRequest {
+  string token = 1;
+}
+
+message V1ConfirmEmailResponse {
+  oneof response {
+    Success success_response = 1;
+    ValidationError validation_error = 2;
+    OtherError other_error = 3;
+  }
+
+  message Success {}
 }

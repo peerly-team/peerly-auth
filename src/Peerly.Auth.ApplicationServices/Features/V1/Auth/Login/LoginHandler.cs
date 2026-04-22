@@ -39,8 +39,7 @@ internal sealed class LoginHandler : ICommandHandler<LoginCommand, LoginCommandR
 
         var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
-        // NOTE: Проверка существования такого пользователя
-        var user = await unitOfWork.UserRepository.GetAsync(command.Email, cancellationToken);
+        var user = await unitOfWork.UserRepository.GetByEmailAsync(command.Email, cancellationToken);
         if (user is null)
         {
             return ValidationError.From(EmailErrors.NotFound);
@@ -60,7 +59,7 @@ internal sealed class LoginHandler : ICommandHandler<LoginCommand, LoginCommandR
             await unitOfWork.SessionRepository.UpdateAsync(sessionFilter, sessionUpdateItem, cancellationToken);
         }
 
-        var authToken = _tokenService.CreateAuthToken(user);
+        var authToken = _tokenService.CreateAuthToken(user.Id, user.Role);
         var refreshTokenHash = await _hashService.HashAsync(authToken.RefreshToken, cancellationToken);
         var sessionAddItem = _mapper.ToSessionAddItem(user.Id, refreshTokenHash);
         _ = await unitOfWork.SessionRepository.AddAsync(sessionAddItem, cancellationToken);

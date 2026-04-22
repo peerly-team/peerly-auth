@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Peerly.Auth.ApplicationServices.Generators.AuthTokens;
 using Peerly.Auth.ApplicationServices.Generators.AuthTokens.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
+using Peerly.Auth.Identifiers;
 using Peerly.Auth.Models.Auth;
 using Peerly.Auth.Models.User;
 
@@ -16,9 +17,9 @@ internal sealed class TokenService : ITokenService
         _jwtGenerator = jwtGenerator;
     }
 
-    public AuthToken CreateAuthToken(UserIdRole user)
+    public AuthToken CreateAuthToken(UserId userId, UserRole userRole)
     {
-        var jwt = _jwtGenerator.Create(user);
+        var jwt = _jwtGenerator.Create(userId, userRole);
 
         return new AuthToken
         {
@@ -27,9 +28,9 @@ internal sealed class TokenService : ITokenService
         };
     }
 
-    public string CreateAccessToken(UserIdRole user)
+    public string CreateAccessToken(UserId userId, UserRole userRole)
     {
-        var jwt = _jwtGenerator.Create(user);
+        var jwt = _jwtGenerator.Create(userId, userRole);
 
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }

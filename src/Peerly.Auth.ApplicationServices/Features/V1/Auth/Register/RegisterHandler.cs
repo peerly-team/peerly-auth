@@ -41,9 +41,8 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
             return error!;
         }
 
-        // NOTE: высчитываем хеши перед открытием транзакции к БД, поскольку очень тяжелые операции
+        // NOTE: высчитываем хеш пароля перед открытием транзакции к БД, поскольку очень тяжелая операция
         var emailVerificationToken = _tokenService.CreateRefreshToken();
-        var emailVerificationTokenHash = await _hashService.HashAsync(emailVerificationToken, cancellationToken);
         var passwordHash = await _hashService.HashAsync(command.Password, cancellationToken);
 
         var setOperations = await unitOfWork.StartOperationSet(cancellationToken);
@@ -51,17 +50,17 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         var userAddItem = _mapper.ToUserAddItem(command, passwordHash);
         var userId = await unitOfWork.UserRepository.AddAsync(userAddItem, cancellationToken);
 
-        var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationTokenHash);
+        var emailVerificationAddItem = _mapper.ToEmailVerificationAddItem(userId, emailVerificationToken);
         _ = await unitOfWork.EmailVerificationRepository.AddAsync(emailVerificationAddItem, cancellationToken);
 
-        var user = RegisterHandlerMapper.ToUserIdRole(userId, command.Role);
-        var authToken = _tokenService.CreateAuthToken(user);
+        var authToken = _tokenService.CreateAuthToken(userId, command.Role);
 
         var refreshTokenHash = await _hashService.HashAsync(authToken.RefreshToken, cancellationToken);
         var sessionAddItem = _mapper.ToSessionAddItem(userId, refreshTokenHash);
         _ = await unitOfWork.SessionRepository.AddAsync(sessionAddItem, cancellationToken);
 
-        // todo: отправить уведомление на почту
+        var outboxMessage = _mapper.ToOutboxMessage(userId, command);
+        _ = await unitOfWork.OutboxRepository.AddAsync(outboxMessage, cancellationToken);
 
         await setOperations.Complete(cancellationToken);
 

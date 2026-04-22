@@ -6,7 +6,7 @@ create table users
     email         text                  not null,
     password_hash text                  not null,
     role          text                  not null,
-    name          text,
+    is_confirmed  bool                  not null,
     creation_time timestamptz           not null,
     update_time   timestamptz
 );
