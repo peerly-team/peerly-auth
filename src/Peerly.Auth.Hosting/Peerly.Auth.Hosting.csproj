@@ -2,6 +2,7 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore"/>
     <PackageReference Include="Grpc.AspNetCore.Server.Reflection"/>
+    <PackageReference Include="Grpc.AspNetCore.Web"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Peerly.Auth.Api\Peerly.Auth.Api.csproj" />
