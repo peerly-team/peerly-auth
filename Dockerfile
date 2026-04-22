@@ -15,6 +15,7 @@ COPY src/Peerly.Auth/Peerly.Auth.csproj                                         
 COPY src/Peerly.Auth.Api/Peerly.Auth.Api.csproj                                 src/Peerly.Auth.Api/
 COPY src/Peerly.Auth.ApplicationServices/Peerly.Auth.ApplicationServices.csproj src/Peerly.Auth.ApplicationServices/
 COPY src/Peerly.Auth.Hosting/Peerly.Auth.Hosting.csproj                         src/Peerly.Auth.Hosting/
+COPY src/Peerly.Auth.Messaging/Peerly.Auth.Messaging.csproj                     src/Peerly.Auth.Messaging/
 COPY src/Peerly.Auth.Persistence/Peerly.Auth.Persistence.csproj                 src/Peerly.Auth.Persistence/
 COPY src/Peerly.Auth.Tools/Peerly.Auth.Tools.csproj                             src/Peerly.Auth.Tools/
 
