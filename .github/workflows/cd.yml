@@ -1,0 +1,241 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-peerly-auth
+  cancel-in-progress: false
+
+env:
+  # ---- Cloud-agnostic ----
+  IMAGE_NAME: peerly-auth
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-toolchain
+
+      - name: Generate protobufs
+        run: buf generate
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+  # =========================================================================
+  # Migrations — one per environment. Same goose, different connection.
+  # =========================================================================
+  migrate-stage:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          install-goose: "true"
+
+      - name: Download DB CA certificate
+        run: curl -fsSL "${{ vars.DB_CA_URL }}" -o /tmp/db-ca.crt
+
+      - name: Apply migrations to stage DB
+        env:
+          PGHOST: ${{ secrets.PG_HOST_STAGE }}
+          PGPORT: ${{ vars.PG_PORT }}
+          PGDATABASE: ${{ vars.PG_DATABASE }}
+          PGUSER: ${{ vars.PG_USER }}
+          PGPASSWORD: ${{ secrets.PG_PASSWORD_STAGE }}
+        run: |
+          CONN="host=$PGHOST port=$PGPORT dbname=$PGDATABASE user=$PGUSER password=$PGPASSWORD sslmode=verify-full sslrootcert=/tmp/db-ca.crt"
+          goose -dir src/Peerly.Auth.Persistence/Migrations postgres "$CONN" up
+
+  migrate-prod:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          install-goose: "true"
+
+      - name: Download DB CA certificate
+        run: curl -fsSL "${{ vars.DB_CA_URL }}" -o /tmp/db-ca.crt
+
+      - name: Apply migrations to prod DB
+        env:
+          PGHOST: ${{ secrets.PG_HOST }}
+          PGPORT: ${{ vars.PG_PORT }}
+          PGDATABASE: ${{ vars.PG_DATABASE }}
+          PGUSER: ${{ vars.PG_USER }}
+          PGPASSWORD: ${{ secrets.PG_PASSWORD }}
+        run: |
+          CONN="host=$PGHOST port=$PGPORT dbname=$PGDATABASE user=$PGUSER password=$PGPASSWORD sslmode=verify-full sslrootcert=/tmp/db-ca.crt"
+          goose -dir src/Peerly.Auth.Persistence/Migrations postgres "$CONN" up
+
+  build-push:
+    # Cloud-agnostic: one image built, pushed once, deployed to both envs.
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        env:
+          REGISTRY: ${{ secrets.REGISTRY }}
+        run: |
+          if [ -z "$REGISTRY" ]; then
+            echo "::error::REGISTRY secret is not set"
+            exit 1
+          fi
+          IMAGE="$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+          vuln-type: os,library
+
+      - name: Push image
+        env:
+          REGISTRY: ${{ secrets.REGISTRY }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          IMAGE="$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin
+          docker push "$IMAGE"
+
+  # =========================================================================
+  # YC-SPECIFIC — stage mirror. Stable peerly-auth-stage container behind api.stage.prly.ru.
+  # =========================================================================
+  deploy-yc-stage:
+    needs: [migrate-stage, build-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install YC CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -n -i /opt/yc
+          echo "/opt/yc/bin" >> "$GITHUB_PATH"
+
+      - name: Configure YC CLI
+        run: |
+          echo '${{ secrets.DEPLOY_SA_KEY_STAGE }}' > /tmp/sa-key.json
+          yc config set service-account-key /tmp/sa-key.json
+          yc config set folder-id ${{ secrets.DEPLOY_SCOPE_ID_STAGE }}
+
+      - name: Resolve Lockbox current version
+        id: lockbox
+        run: |
+          JSON=$(yc lockbox secret get --id ${{ secrets.SECRETS_STORE_ID_STAGE }} --format json)
+          VER=$(echo "$JSON" | jq -r '.current_version.id // .currentVersion.id // empty')
+          if [ -z "$VER" ]; then
+            echo "::error::Failed to resolve Lockbox current version id"
+            exit 1
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve image reference
+        id: image
+        env:
+          REGISTRY: ${{ secrets.REGISTRY }}
+        run: echo "url=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy stage container
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.DEPLOY_SA_KEY_STAGE }}
+          container-name: peerly-auth-stage
+          folder-id: ${{ secrets.DEPLOY_SCOPE_ID_STAGE }}
+          revision-image-url: ${{ steps.image.outputs.url }}
+          revision-service-account-id: ${{ secrets.RUNTIME_SA_ID_STAGE }}
+          revision-env: |
+            ASPNETCORE_ENVIRONMENT=Staging
+            ConnectionFactoryOptions__MasterHost=${{ secrets.PG_HOST_STAGE }}
+          revision-secrets: |
+            ConnectionFactoryOptions__Password=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/db_password
+            SigningOptions__SigningKeys__0__PrivateKey=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_private_key
+            SigningOptions__SigningKeys__0__Kid=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_kid
+            SigningOptions__SigningKeys__0__IsActive=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_is_active
+
+      - name: Grant invoker to maintainers group
+        if: vars.MAINTAINERS_GROUP_ID != ''
+        run: yc serverless container add-access-binding --name peerly-auth-stage --folder-id ${{ secrets.DEPLOY_SCOPE_ID_STAGE }} --role serverless.containers.invoker --subject group:${{ vars.MAINTAINERS_GROUP_ID }}
+
+      - name: Grant invoker to gateway runtime SA
+        run: yc serverless container add-access-binding --name peerly-auth-stage --folder-id ${{ secrets.DEPLOY_SCOPE_ID_STAGE }} --role serverless.containers.invoker --subject serviceAccount:${{ secrets.RUNTIME_SA_ID_STAGE }}
+
+      - name: Cleanup SA key
+        if: always()
+        run: rm -f /tmp/sa-key.json
+
+  # =========================================================================
+  # YC-SPECIFIC — prod. Stable peerly-auth container behind api.prly.ru.
+  # =========================================================================
+  deploy-yc-prod:
+    needs: [migrate-prod, build-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install YC CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -n -i /opt/yc
+          echo "/opt/yc/bin" >> "$GITHUB_PATH"
+
+      - name: Configure YC CLI
+        run: |
+          echo '${{ secrets.DEPLOY_SA_KEY }}' > /tmp/sa-key.json
+          yc config set service-account-key /tmp/sa-key.json
+          yc config set folder-id ${{ secrets.DEPLOY_SCOPE_ID }}
+
+      - name: Resolve Lockbox current version
+        id: lockbox
+        run: |
+          JSON=$(yc lockbox secret get --id ${{ secrets.SECRETS_STORE_ID }} --format json)
+          VER=$(echo "$JSON" | jq -r '.current_version.id // .currentVersion.id // empty')
+          if [ -z "$VER" ]; then
+            echo "::error::Failed to resolve Lockbox current version id"
+            exit 1
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve image reference
+        id: image
+        env:
+          REGISTRY: ${{ secrets.REGISTRY }}
+        run: echo "url=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy prod container
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.DEPLOY_SA_KEY }}
+          container-name: peerly-auth
+          folder-id: ${{ secrets.DEPLOY_SCOPE_ID }}
+          revision-image-url: ${{ steps.image.outputs.url }}
+          revision-service-account-id: ${{ secrets.RUNTIME_SA_ID }}
+          revision-env: |
+            ASPNETCORE_ENVIRONMENT=Production
+            ConnectionFactoryOptions__MasterHost=${{ secrets.PG_HOST }}
+          revision-secrets: |
+            ConnectionFactoryOptions__Password=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/db_password
+            SigningOptions__SigningKeys__0__PrivateKey=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_private_key
+            SigningOptions__SigningKeys__0__Kid=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_kid
+            SigningOptions__SigningKeys__0__IsActive=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_is_active
+
+      - name: Grant invoker to gateway runtime SA
+        run: yc serverless container add-access-binding --name peerly-auth --folder-id ${{ secrets.DEPLOY_SCOPE_ID }} --role serverless.containers.invoker --subject serviceAccount:${{ secrets.RUNTIME_SA_ID }}
+
+      - name: Cleanup SA key
+        if: always()
+        run: rm -f /tmp/sa-key.json

@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Peerly.Auth.Api.Controllers.Auth;
@@ -20,7 +18,6 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        ConfigureGrpc(builder);
         ConfigureServices(builder.Services, builder.Configuration);
 
         var app = builder.Build();
@@ -32,6 +29,9 @@ public static class Program
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddGrpc();
+        services.AddGrpcReflection();
+
         // Api
         services.ConfigureApi(configuration);
 
@@ -42,24 +42,6 @@ public static class Program
         services.ConfigurePersistence(configuration);
     }
 
-    private static void ConfigureGrpc(WebApplicationBuilder builder)
-    {
-        builder.Services.AddGrpc();
-        builder.Services.AddGrpcReflection();
-
-        builder.WebHost.ConfigureKestrel(
-            o =>
-            {
-                o.ListenLocalhost(
-                    5002,
-                    lo =>
-                    {
-                        lo.UseHttps();
-                        lo.Protocols = HttpProtocols.Http2;
-                    });
-            });
-    }
-
     private static void RegistrationEndpoints(WebApplication app)
     {
         app.UseRouting();
@@ -68,7 +50,6 @@ public static class Program
 
         app.MapGrpcReflectionService();
 
-        // infrastructure configuration
         ValidationPropertyMappingConfiguration.Configure();
     }
 }

@@ -1,0 +1,61 @@
+name: Setup toolchain
+description: Install .NET, buf and optionally goose from .tool-versions
+
+inputs:
+  install-goose:
+    description: Install goose migration tool
+    required: false
+    default: "false"
+
+outputs:
+  dotnet:
+    description: .NET version read from .tool-versions
+    value: ${{ steps.versions.outputs.dotnet }}
+  buf:
+    description: buf version read from .tool-versions
+    value: ${{ steps.versions.outputs.buf }}
+  goose:
+    description: goose version read from .tool-versions
+    value: ${{ steps.versions.outputs.goose }}
+
+runs:
+  using: composite
+  steps:
+    - name: Parse .tool-versions
+      id: versions
+      shell: bash
+      run: |
+        dotnet=$(grep '^dotnet ' .tool-versions | awk '{print $2}')
+        buf=$(grep '^buf ' .tool-versions | awk '{print $2}')
+        goose=$(grep '^goose ' .tool-versions | awk '{print $2}')
+        echo "dotnet=$dotnet"   >> "$GITHUB_OUTPUT"
+        echo "buf=$buf"         >> "$GITHUB_OUTPUT"
+        echo "goose=$goose"     >> "$GITHUB_OUTPUT"
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ steps.versions.outputs.dotnet }}
+
+    - name: Setup buf
+      uses: bufbuild/buf-setup-action@v1
+      with:
+        version: ${{ steps.versions.outputs.buf }}
+        github_token: ${{ github.token }}
+
+    - name: Install goose
+      if: inputs.install-goose == 'true'
+      shell: bash
+      env:
+        GOOSE_VERSION: ${{ steps.versions.outputs.goose }}
+      run: |
+        os=$(uname -s | tr '[:upper:]' '[:lower:]')
+        arch=$(uname -m)
+        case "$arch" in
+          x86_64) arch=x86_64 ;;
+          aarch64|arm64) arch=arm64 ;;
+        esac
+        curl -fsSL "https://github.com/pressly/goose/releases/download/v${GOOSE_VERSION}/goose_${os}_${arch}" \
+          -o /usr/local/bin/goose
+        chmod +x /usr/local/bin/goose
+        goose -version

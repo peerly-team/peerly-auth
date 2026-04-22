@@ -1,0 +1,26 @@
+{
+  "Kestrel": {
+    "Endpoints": {
+      "Grpc": {
+        "Url": "https://localhost:5002"
+      }
+    }
+  },
+  "SigningOptions": {
+    "SigningKeys": [
+      {
+        "PrivateKey": "-----BEGIN PRIVATE KEY-----\n<generate with: openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048>\n-----END PRIVATE KEY-----",
+        "Kid": "<generate with: uuidgen>",
+        "IsActive": true
+      }
+    ]
+  },
+  "ConnectionFactoryOptions": {
+    "MasterHost": "localhost",
+    "DefaultPort": 54320,
+    "Database": "peerly-auth",
+    "UserName": "peerly-auth-user",
+    "Password": "<your local postgres password>",
+    "SslMode": "Disable"
+  }
+}
