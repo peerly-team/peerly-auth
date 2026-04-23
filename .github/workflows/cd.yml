@@ -163,16 +163,17 @@ jobs:
           revision-service-account-id: ${{ secrets.RUNTIME_SA_ID_STAGE }}
           revision-memory: 256Mb
           revision-execution-timeout: 30
+          revision-network-id: enp52gi9aekt8lq1ptmr
           revision-env: |
             ASPNETCORE_ENVIRONMENT=Staging
             ConnectionFactoryOptions__MasterHost=${{ secrets.PG_HOST_STAGE }}
             Smtp__VerificationBaseUrl=https://www.stage.prly.ru/verify-email
+            KafkaProducer__BootstrapServers=10.20.0.11:9092
           revision-secrets: |
             ConnectionFactoryOptions__Password=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/db_password
             SigningOptions__SigningKeys__0__PrivateKey=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_private_key
             SigningOptions__SigningKeys__0__Kid=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_kid
             SigningOptions__SigningKeys__0__IsActive=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_is_active
-            Smtp__Username=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/smtp_username
             Smtp__Password=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/smtp_password
 
       - name: Grant invoker to maintainers group
@@ -231,16 +232,17 @@ jobs:
           revision-service-account-id: ${{ secrets.RUNTIME_SA_ID }}
           revision-memory: 256Mb
           revision-execution-timeout: 30
+          revision-network-id: enpv2cm80vb02lp76dmi
           revision-env: |
             ASPNETCORE_ENVIRONMENT=Production
             ConnectionFactoryOptions__MasterHost=${{ secrets.PG_HOST }}
             Smtp__VerificationBaseUrl=https://www.prly.ru/verify-email
+            KafkaProducer__BootstrapServers=10.10.0.10:9092
           revision-secrets: |
             ConnectionFactoryOptions__Password=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/db_password
             SigningOptions__SigningKeys__0__PrivateKey=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_private_key
             SigningOptions__SigningKeys__0__Kid=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_kid
             SigningOptions__SigningKeys__0__IsActive=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_is_active
-            Smtp__Username=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/smtp_username
             Smtp__Password=${{ secrets.SECRETS_STORE_ID }}/${{ steps.lockbox.outputs.version }}/smtp_password
 
       - name: Grant invoker to gateway runtime SA
