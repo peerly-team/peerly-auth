@@ -28,7 +28,7 @@
     "SenderEmail": "noreply@peerly.local",
     "SenderName": "Peerly",
     "SecurityMode": "None",
-    "VerificationBaseUrl": "http://localhost:5000/api/v1/auth/confirm-email"
+    "VerificationBaseUrl": "http://localhost:3000/verify-email"
   },
   "KafkaProducer": {
     "BootstrapServers": "localhost:9092",
