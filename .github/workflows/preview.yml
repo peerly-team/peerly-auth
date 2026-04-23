@@ -139,7 +139,7 @@ jobs:
           revision-service-account-id: ${{ secrets.RUNTIME_SA_ID_STAGE }}
           revision-memory: 256Mb
           revision-execution-timeout: 30
-          revision-provisioned-instances: 1
+          revision-provisioned: 1
           revision-network-id: enp52gi9aekt8lq1ptmr
           revision-env: |
             ASPNETCORE_ENVIRONMENT=Staging
