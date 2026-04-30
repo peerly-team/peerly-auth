@@ -2,7 +2,7 @@ name: Preview
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     branches: [main]
 
 concurrency:
@@ -11,11 +11,13 @@ concurrency:
 
 env:
   IMAGE_NAME: peerly-auth
-  CONTAINER_NAME: peerly-auth-pr-${{ github.event.number }}
+  REGISTRY: ghcr.io/peerly-team
+
+permissions:
+  contents: read
 
 jobs:
   build-and-test:
-    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,194 +30,60 @@ jobs:
       - run: dotnet build --no-restore --configuration Release
       - run: dotnet test --no-build --configuration Release
 
-  migrate-stage:
-    if: github.event.action != 'closed'
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-toolchain
-        with:
-          install-goose: "true"
-
-      - name: Download DB CA certificate
-        run: curl -fsSL "${{ vars.DB_CA_URL }}" -o /tmp/db-ca.crt
-
-      - name: Apply migrations to stage DB
-        env:
-          PGHOST: ${{ secrets.PG_HOST_STAGE }}
-          PGPORT: ${{ vars.PG_PORT }}
-          PGDATABASE: ${{ vars.PG_DATABASE }}
-          PGUSER: ${{ vars.PG_USER }}
-          PGPASSWORD: ${{ secrets.PG_PASSWORD_STAGE }}
-        run: |
-          CONN="host=$PGHOST port=$PGPORT dbname=$PGDATABASE user=$PGUSER password=$PGPASSWORD sslmode=verify-full sslrootcert=/tmp/db-ca.crt"
-          goose -dir src/Peerly.Auth.Persistence/Migrations postgres "$CONN" up
-
   build-push:
-    if: github.event.action != 'closed'
     needs: build-and-test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Build image
-        env:
-          REGISTRY: ${{ secrets.REGISTRY }}
         run: |
-          if [ -z "$REGISTRY" ]; then
-            echo "::error::REGISTRY secret is not set"
-            exit 1
-          fi
-          IMAGE="$REGISTRY/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}"
           docker build -t "$IMAGE" .
 
       - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ secrets.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}
           severity: CRITICAL,HIGH
           exit-code: 1
           ignore-unfixed: true
           vuln-type: os,library
 
       - name: Push image
-        env:
-          REGISTRY: ${{ secrets.REGISTRY }}
-          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-        run: |
-          IMAGE="$REGISTRY/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}"
-          echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin
-          docker push "$IMAGE"
+        run: docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}"
 
-  # =========================================================================
-  # YC-SPECIFIC — preview deploy onto Yandex Cloud Serverless Containers (stage folder).
-  # =========================================================================
-  deploy-yc-preview:
-    if: github.event.action != 'closed'
-    needs: [migrate-stage, build-push]
+  build-push-migrations:
+    needs: build-and-test
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      contents: read
+      packages: write
     steps:
-      - name: Install YC CLI
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build migrations image
         run: |
-          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh \
-            | bash -s -- -n -i /opt/yc
-          echo "/opt/yc/bin" >> "$GITHUB_PATH"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:pr-${{ github.event.number }}"
+          docker build -t "$IMAGE" -f Dockerfile.migrations .
 
-      - name: Configure YC CLI
-        run: |
-          echo '${{ secrets.DEPLOY_SA_KEY_STAGE }}' > /tmp/sa-key.json
-          yc config set service-account-key /tmp/sa-key.json
-          yc config set folder-id ${{ secrets.DEPLOY_SCOPE_ID_STAGE }}
-
-      - name: Resolve Lockbox current version
-        id: lockbox
-        run: |
-          JSON=$(yc lockbox secret get --id ${{ secrets.SECRETS_STORE_ID_STAGE }} --format json)
-          echo "$JSON"
-          VER=$(echo "$JSON" | jq -r '.current_version.id // .currentVersion.id // empty')
-          if [ -z "$VER" ]; then
-            echo "::error::Failed to resolve Lockbox current version id"
-            exit 1
-          fi
-          echo "version=$VER" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve image reference
-        id: image
-        env:
-          REGISTRY: ${{ secrets.REGISTRY }}
-        run: echo "url=$REGISTRY/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy preview container
-        uses: yc-actions/yc-sls-container-deploy@v2
+      - name: Scan migrations image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          yc-sa-json-credentials: ${{ secrets.DEPLOY_SA_KEY_STAGE }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          folder-id: ${{ secrets.DEPLOY_SCOPE_ID_STAGE }}
-          revision-image-url: ${{ steps.image.outputs.url }}
-          revision-service-account-id: ${{ secrets.RUNTIME_SA_ID_STAGE }}
-          revision-memory: 256Mb
-          revision-execution-timeout: 30
-          revision-provisioned: 1
-          revision-network-id: enp52gi9aekt8lq1ptmr
-          revision-env: |
-            ASPNETCORE_ENVIRONMENT=Staging
-            ConnectionFactoryOptions__MasterHost=${{ secrets.PG_HOST_STAGE }}
-            Smtp__VerificationBaseUrl=https://www.stage.prly.ru/verify-email
-            KafkaProducer__BootstrapServers=10.20.0.11:9092
-          revision-secrets: |
-            ConnectionFactoryOptions__Password=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/db_password
-            SigningOptions__SigningKeys__0__PrivateKey=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_private_key
-            SigningOptions__SigningKeys__0__Kid=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_kid
-            SigningOptions__SigningKeys__0__IsActive=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/jwt_key_0_is_active
-            Smtp__Password=${{ secrets.SECRETS_STORE_ID_STAGE }}/${{ steps.lockbox.outputs.version }}/smtp_password
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:pr-${{ github.event.number }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+          vuln-type: os
 
-      - name: Get container URL
-        id: get-url
-        run: |
-          URL=$(yc serverless container get --name "${{ env.CONTAINER_NAME }}" --format json | jq -r '.url')
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-
-      - name: Post preview URL to PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const marker = '<!-- peerly-auth-preview -->';
-            const url = '${{ steps.get-url.outputs.url }}';
-            const body = `${marker}\n**peerly-auth preview:** ${url}`;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
-      - name: Cleanup SA key
-        if: always()
-        run: rm -f /tmp/sa-key.json
-
-  # =========================================================================
-  # YC-SPECIFIC — tear down preview container on PR close.
-  # =========================================================================
-  cleanup-yc-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install YC CLI
-        run: |
-          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh \
-            | bash -s -- -n -i /opt/yc
-          echo "/opt/yc/bin" >> "$GITHUB_PATH"
-
-      - name: Configure YC CLI
-        run: |
-          echo '${{ secrets.DEPLOY_SA_KEY_STAGE }}' > /tmp/sa-key.json
-          yc config set service-account-key /tmp/sa-key.json
-          yc config set folder-id ${{ secrets.DEPLOY_SCOPE_ID_STAGE }}
-
-      - name: Delete preview container
-        run: yc serverless container delete --name "${{ env.CONTAINER_NAME }}" || true
-
-      - name: Cleanup SA key
-        if: always()
-        run: rm -f /tmp/sa-key.json
+      - name: Push migrations image
+        run: docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:pr-${{ github.event.number }}"
