@@ -1,0 +1,20 @@
+FROM alpine:3.20
+
+ARG GOOSE_VERSION=3.22.1
+
+RUN apk add --no-cache ca-certificates wget && \
+    cd /tmp && \
+    wget -q "https://github.com/pressly/goose/releases/download/v${GOOSE_VERSION}/goose_linux_x86_64" && \
+    wget -q "https://github.com/pressly/goose/releases/download/v${GOOSE_VERSION}/checksums.txt" && \
+    grep "  goose_linux_x86_64$" checksums.txt | sha256sum -c - && \
+    mv goose_linux_x86_64 /usr/local/bin/goose && \
+    chmod +x /usr/local/bin/goose && \
+    rm checksums.txt && \
+    apk del wget && \
+    addgroup -g 1001 goose && \
+    adduser -u 1001 -G goose -s /sbin/nologin -D goose
+
+COPY --chown=1001:1001 src/Peerly.Auth.Persistence/Migrations /migrations
+
+USER 1001:1001
+ENTRYPOINT ["/usr/local/bin/goose"]
