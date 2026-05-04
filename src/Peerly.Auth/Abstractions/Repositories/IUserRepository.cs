@@ -17,5 +17,4 @@ public interface IReadOnlyUserRepository
     Task<UserRole?> GetUserRoleAsync(UserId userId, CancellationToken cancellationToken);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(string email, CancellationToken cancellationToken);
-    Task<bool> IsEmailConfirmedAsync(UserId userId, CancellationToken cancellationToken);
 }

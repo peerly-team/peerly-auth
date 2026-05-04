@@ -133,29 +133,6 @@ internal sealed class UserRepository : IUserRepository
         return await _connectionContext.Connection.ExecuteScalarAsync<bool>(command);
     }
 
-    public async Task<bool> IsEmailConfirmedAsync(UserId userId, CancellationToken cancellationToken)
-    {
-        var queryParams = new
-        {
-            UserId = (long)userId
-        };
-
-        const string Query =
-            $"""
-             select {UserTable.IsConfirmed}
-               from {UserTable.TableName}
-              where {UserTable.Id} = @{nameof(queryParams.UserId)};
-             """;
-
-        var command = new CommandDefinition(
-            commandText: Query,
-            parameters: queryParams,
-            transaction: _connectionContext.Transaction,
-            cancellationToken: cancellationToken);
-
-        return await _connectionContext.Connection.ExecuteScalarAsync<bool>(command);
-    }
-
     public async Task<bool> UpdateAsync(
         UserId userId,
         Action<IUpdateBuilder<UserUpdateItem>> configureUpdate,
