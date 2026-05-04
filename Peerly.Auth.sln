@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Hosting", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.Messaging", "src\Peerly.Auth.Messaging\Peerly.Auth.Messaging.csproj", "{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peerly.Auth.IntegrationTests", "tests\Peerly.Auth.IntegrationTests\Peerly.Auth.IntegrationTests.csproj", "{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,18 @@ Global
 		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x64.Build.0 = Release|Any CPU
 		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x86.ActiveCfg = Release|Any CPU
 		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773}.Release|x86.Build.0 = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|x64.Build.0 = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Debug|x86.Build.0 = Debug|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|x64.ActiveCfg = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|x64.Build.0 = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|x86.ActiveCfg = Release|Any CPU
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -154,5 +168,6 @@ Global
 		{747BCB11-D59B-40B1-BF3B-ABCEE1196362} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{85F01B70-B8EA-4CE7-8DC7-588C318A4596} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1D6A1C91-9C4A-47BA-826A-0C3B8237C773} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{C3DA6657-4D91-4D63-A0C6-8D380AB085BD} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

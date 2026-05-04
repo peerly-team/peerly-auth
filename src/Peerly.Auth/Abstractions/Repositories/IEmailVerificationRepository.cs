@@ -16,5 +16,6 @@ public interface IEmailVerificationRepository : IReadOnlyEmailVerificationReposi
 
 public interface IReadOnlyEmailVerificationRepository
 {
+    Task<UserId?> GetUserIdByTokenAsync(string token, CancellationToken cancellationToken);
     Task<UserExpirationTime?> GetUserExpirationTimeByTokenAsync(string token, CancellationToken cancellationToken);
 }

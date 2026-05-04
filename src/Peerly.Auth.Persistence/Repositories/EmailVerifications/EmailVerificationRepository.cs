@@ -23,6 +23,30 @@ internal sealed class EmailVerificationRepository : IEmailVerificationRepository
         _connectionContext = connectionContext;
     }
 
+    public async Task<UserId?> GetUserIdByTokenAsync(string token, CancellationToken cancellationToken)
+    {
+        var queryParams = new
+        {
+            Token = token
+        };
+
+        const string Query =
+            $"""
+             select {EmailVerificationTable.UserId}
+               from {EmailVerificationTable.TableName}
+              where {EmailVerificationTable.Token} = @{nameof(queryParams.Token)};
+             """;
+
+        var command = new CommandDefinition(
+            commandText: Query,
+            parameters: queryParams,
+            transaction: _connectionContext.Transaction,
+            cancellationToken: cancellationToken);
+        var userId = await _connectionContext.Connection.QuerySingleOrDefaultAsync<long?>(command);
+
+        return userId is null ? null : new UserId(userId.Value);
+    }
+
     public async Task<UserExpirationTime?> GetUserExpirationTimeByTokenAsync(string token, CancellationToken cancellationToken)
     {
         var queryParams = new { Token = token };
