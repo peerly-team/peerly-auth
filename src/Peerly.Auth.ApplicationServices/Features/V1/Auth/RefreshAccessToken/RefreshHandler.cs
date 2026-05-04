@@ -2,10 +2,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
+using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
-using Peerly.Auth.ApplicationServices.Validation.Errors;
 using Peerly.Auth.Exceptions;
 using Peerly.Auth.Models.Auth;
 
