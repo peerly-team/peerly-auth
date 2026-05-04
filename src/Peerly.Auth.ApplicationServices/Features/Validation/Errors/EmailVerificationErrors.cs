@@ -1,6 +1,6 @@
 using Peerly.Auth.Models.Shared;
 
-namespace Peerly.Auth.ApplicationServices.Validation.Errors;
+namespace Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 
 internal static class EmailVerificationErrors
 {

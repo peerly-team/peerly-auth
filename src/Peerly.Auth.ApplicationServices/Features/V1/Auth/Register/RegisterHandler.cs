@@ -4,11 +4,10 @@ using Devolutions.Zxcvbn;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
+using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
-using Peerly.Auth.ApplicationServices.Validation.Errors;
-using Peerly.Auth.ApplicationServices.Validation.Validators;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 
@@ -71,6 +70,7 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         };
     }
 
+    // todo: добавить валидатор для V1RegisterRequest, чтобы там проверять формат почты
     private static async Task<(bool, ValidationError?)> CommandValidateAsync(
         RegisterCommand command,
         ICommonUnitOfWork unitOfWork,
@@ -81,11 +81,6 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
         if (isEmailExists)
         {
             return (true, ValidationError.From(EmailErrors.EmailAlreadyUsed));
-        }
-
-        if (!EmailValidator.IsValid(email))
-        {
-            return (true, ValidationError.From(EmailErrors.IncorrectEmailFormat));
         }
 
         if (Zxcvbn.Evaluate(command.Password).Score < 3)

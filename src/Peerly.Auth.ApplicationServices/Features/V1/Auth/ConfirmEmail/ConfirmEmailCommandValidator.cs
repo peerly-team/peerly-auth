@@ -4,8 +4,8 @@ using OneOf.Types;
 using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
+using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
-using Peerly.Auth.ApplicationServices.Validation.Errors;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
 
