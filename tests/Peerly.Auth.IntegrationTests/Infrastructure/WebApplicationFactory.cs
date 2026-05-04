@@ -15,6 +15,7 @@ using Peerly.Auth.Api.Extensions;
 using Peerly.Auth.Api.Infrastructure.Configuration;
 using Peerly.Auth.ApplicationServices.Extensions;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.Persistence.Extensions;
 
 namespace Peerly.Auth.IntegrationTests.Infrastructure;
@@ -63,16 +64,16 @@ public sealed class WebApplicationFactory : IAsyncDisposable
 
     public ConfirmEmailGrpcClient CreateConfirmEmailClient()
     {
-        var handler = new GrpcWebHandler(GetTestServer().CreateHandler());
-        var channel = GrpcChannel.ForAddress(
-            "http://localhost",
-            new GrpcChannelOptions
-            {
-                HttpHandler = handler
-            });
-
-        return new ConfirmEmailGrpcClient(channel);
+        return new ConfirmEmailGrpcClient(CreateGrpcChannel());
     }
+
+    public LoginGrpcClient CreateLoginClient()
+    {
+        return new LoginGrpcClient(CreateGrpcChannel());
+    }
+
+    public IServiceProvider Services => _host?.Services
+        ?? throw new InvalidOperationException("Integration test host is not initialized.");
 
     public async ValueTask DisposeAsync()
     {
@@ -87,6 +88,17 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     {
         return _host?.GetTestServer()
             ?? throw new InvalidOperationException("Integration test host is not initialized.");
+    }
+
+    private GrpcChannel CreateGrpcChannel()
+    {
+        var handler = new GrpcWebHandler(GetTestServer().CreateHandler());
+        return GrpcChannel.ForAddress(
+            "http://localhost",
+            new GrpcChannelOptions
+            {
+                HttpHandler = handler
+            });
     }
 
     private IReadOnlyDictionary<string, string?> GetConfiguration()

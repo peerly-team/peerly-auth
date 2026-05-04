@@ -8,8 +8,8 @@ using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.Abstractions.Repositories;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
+using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
-using Peerly.Auth.ApplicationServices.Validation.Errors;
 using Peerly.Auth.Models.EmailVerifications;
 using Xunit;
 
