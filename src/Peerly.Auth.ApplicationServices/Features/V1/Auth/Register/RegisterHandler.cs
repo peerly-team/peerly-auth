@@ -1,10 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Devolutions.Zxcvbn;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
-using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
@@ -17,28 +15,31 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
     private readonly ITokenService _tokenService;
     private readonly IHashService _hashService;
     private readonly IRegisterHandlerMapper _mapper;
+    private readonly ICommandValidator<RegisterCommand, RegisterCommandResponse> _validator;
 
     public RegisterHandler(
         ICommonUnitOfWorkFactory unitOfWorkFactory,
         ITokenService tokenService,
         IHashService hashService,
-        IRegisterHandlerMapper mapper)
+        IRegisterHandlerMapper mapper,
+        ICommandValidator<RegisterCommand, RegisterCommandResponse> validator)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _tokenService = tokenService;
         _hashService = hashService;
         _mapper = mapper;
+        _validator = validator;
     }
 
     public async Task<CommandResponse<RegisterCommandResponse>> ExecuteAsync(RegisterCommand command, CancellationToken cancellationToken)
     {
-        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
-
-        var (isError, error) = await CommandValidateAsync(command, unitOfWork, cancellationToken);
-        if (isError)
+        var validationResult = await _validator.ValidateAsync(command, cancellationToken);
+        if (validationResult.TryPickError(out var error))
         {
-            return error!;
+            return error;
         }
+
+        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
         // NOTE: высчитываем хеш пароля перед открытием транзакции к БД, поскольку очень тяжелая операция
         var emailVerificationToken = _tokenService.CreateRefreshToken();
@@ -68,26 +69,5 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
             UserId = userId,
             AuthToken = authToken
         };
-    }
-
-    // todo: добавить валидатор для V1RegisterRequest, чтобы там проверять формат почты
-    private static async Task<(bool, ValidationError?)> CommandValidateAsync(
-        RegisterCommand command,
-        ICommonUnitOfWork unitOfWork,
-        CancellationToken cancellationToken)
-    {
-        var email = command.Email;
-        var isEmailExists = await unitOfWork.UserRepository.ExistsAsync(email, cancellationToken);
-        if (isEmailExists)
-        {
-            return (true, ValidationError.From(EmailErrors.EmailAlreadyUsed));
-        }
-
-        if (Zxcvbn.Evaluate(command.Password).Score < 3)
-        {
-            return (true, ValidationError.From(PasswordErrors.IsTooSimple));
-        }
-
-        return (false, null);
     }
 }
