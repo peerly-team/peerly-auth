@@ -6,9 +6,9 @@ using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.GetJwks;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Login;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
-using Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.ConfirmEmail;
+using Peerly.Auth.ApplicationServices.Features.V1.Auth.Refresh;
 using Peerly.Auth.V1;
 
 namespace Peerly.Auth.Api.Controllers.Auth;
