@@ -15,5 +15,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     <InternalsVisibleTo Include="Peerly.Auth.Tests" />
+    <InternalsVisibleTo Include="Peerly.Auth.IntegrationTests" />
   </ItemGroup>
 </Project>

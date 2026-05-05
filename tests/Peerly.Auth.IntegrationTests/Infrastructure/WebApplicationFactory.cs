@@ -17,6 +17,7 @@ using Peerly.Auth.ApplicationServices.Extensions;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Register.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Refresh.Infrastructure;
 using Peerly.Auth.Persistence.Extensions;
 
@@ -30,6 +31,7 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     private readonly string _databaseUsername;
     private readonly string _databasePassword;
     private IHost? _host;
+    private GrpcChannel? _channel;
 
     public WebApplicationFactory(
         string databaseHost,
@@ -66,22 +68,27 @@ public sealed class WebApplicationFactory : IAsyncDisposable
 
     public ConfirmEmailGrpcClient CreateConfirmEmailClient()
     {
-        return new ConfirmEmailGrpcClient(CreateGrpcChannel());
+        return new ConfirmEmailGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public LoginGrpcClient CreateLoginClient()
     {
-        return new LoginGrpcClient(CreateGrpcChannel());
+        return new LoginGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public LogoutGrpcClient CreateLogoutClient()
     {
-        return new LogoutGrpcClient(CreateGrpcChannel());
+        return new LogoutGrpcClient(GetOrCreateGrpcChannel());
+    }
+
+    public RegisterGrpcClient CreateRegisterClient()
+    {
+        return new RegisterGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public RefreshGrpcClient CreateRefreshClient()
     {
-        return new RefreshGrpcClient(CreateGrpcChannel());
+        return new RefreshGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public IServiceProvider Services => _host?.Services
@@ -89,6 +96,8 @@ public sealed class WebApplicationFactory : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _channel?.Dispose();
+
         if (_host is not null)
         {
             await _host.StopAsync();
@@ -102,14 +111,13 @@ public sealed class WebApplicationFactory : IAsyncDisposable
             ?? throw new InvalidOperationException("Integration test host is not initialized.");
     }
 
-    private GrpcChannel CreateGrpcChannel()
+    private GrpcChannel GetOrCreateGrpcChannel()
     {
-        var handler = new GrpcWebHandler(GetTestServer().CreateHandler());
-        return GrpcChannel.ForAddress(
+        return _channel ??= GrpcChannel.ForAddress(
             "http://localhost",
             new GrpcChannelOptions
             {
-                HttpHandler = handler
+                HttpHandler = new GrpcWebHandler(GetTestServer().CreateHandler())
             });
     }
 

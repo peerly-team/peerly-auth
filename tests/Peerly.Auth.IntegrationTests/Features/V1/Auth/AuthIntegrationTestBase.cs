@@ -1,9 +1,9 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Peerly.Auth.ApplicationServices.Services.Abstractions;
 using Peerly.Auth.IntegrationTests.Infrastructure;
 using Xunit;
 
@@ -74,7 +74,7 @@ public abstract class AuthIntegrationTestBase : IAsyncLifetime
               from sessions
              where user_id = @userId;
             """,
-            userId);
+            command => command.Parameters.AddWithValue("userId", userId));
     }
 
     protected Task<long> GetActiveSessionsCountAsync(long userId)
@@ -86,7 +86,7 @@ public abstract class AuthIntegrationTestBase : IAsyncLifetime
              where user_id = @userId
                and cancellation_time is null;
             """,
-            userId);
+            command => command.Parameters.AddWithValue("userId", userId));
     }
 
     protected Task<long> GetCancelledSessionsCountAsync(long userId)
@@ -98,24 +98,14 @@ public abstract class AuthIntegrationTestBase : IAsyncLifetime
              where user_id = @userId
                and cancellation_time is not null;
             """,
-            userId);
+            command => command.Parameters.AddWithValue("userId", userId));
     }
 
     protected async Task<string> HashAsync(string value)
     {
         using var scope = Fixture.ApplicationFactory.Services.CreateScope();
-        var hashServiceType = typeof(Peerly.Auth.ApplicationServices.Extensions.ServiceCollectionExtensions).Assembly.GetType(
-            "Peerly.Auth.ApplicationServices.Services.Abstractions.IHashService",
-            throwOnError: true)
-            ?? throw new InvalidOperationException("Hash service type was not found.");
-        var hashService = scope.ServiceProvider.GetRequiredService(hashServiceType);
-        var hashAsyncMethod = hashServiceType.GetMethod("HashAsync", BindingFlags.Public | BindingFlags.Instance)
-            ?? throw new InvalidOperationException("HashAsync method was not found.");
-
-        var hashTask = (Task<string>?)hashAsyncMethod.Invoke(hashService, [value, CancellationToken.None])
-            ?? throw new InvalidOperationException("HashAsync method did not return a task.");
-
-        return await hashTask;
+        var hashService = scope.ServiceProvider.GetRequiredService<IHashService>();
+        return await hashService.HashAsync(value, CancellationToken.None);
     }
 
     private async Task<long> AddActiveSessionWithHashInDbAsync(long userId, string refreshTokenHash)
@@ -138,11 +128,11 @@ public abstract class AuthIntegrationTestBase : IAsyncLifetime
         return (long)(await command.ExecuteScalarAsync() ?? throw new InvalidOperationException("Session id was not returned."));
     }
 
-    private async Task<long> ExecuteScalarLongAsync(string query, long userId)
+    protected async Task<long> ExecuteScalarLongAsync(string query, Action<NpgsqlCommand> configureCommand)
     {
         await using var connection = await Fixture.DataSource.OpenConnectionAsync();
         await using var command = new NpgsqlCommand(query, connection);
-        command.Parameters.AddWithValue("userId", userId);
+        configureCommand(command);
 
         return (long)(await command.ExecuteScalarAsync() ?? throw new InvalidOperationException("Scalar query did not return a value."));
     }

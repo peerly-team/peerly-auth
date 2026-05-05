@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.V1.Auth.Register.Abstractions;
 using Peerly.Auth.Tools.Abstractions;
 
@@ -9,5 +10,6 @@ internal sealed class RegisterHandlerInstaller : IInstaller
     public void InstallServices(IServiceCollection services)
     {
         services.AddScoped<IRegisterHandlerMapper, RegisterHandlerMapper>();
+        services.AddScoped<ICommandValidator<RegisterCommand, RegisterCommandResponse>, RegisterCommandValidator>();
     }
 }
