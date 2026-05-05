@@ -1,19 +1,11 @@
-using Peerly.Auth.Abstractions.ApplicationServices;
-using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout.Abstractions;
+using System;
 using Peerly.Auth.Models.Sessions;
 
 namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout;
 
-internal sealed class LogoutHandlerMapper : ILogoutHandlerMapper
+internal static class LogoutHandlerMapper
 {
-    private readonly IClock _clock;
-
-    public LogoutHandlerMapper(IClock clock)
-    {
-        _clock = clock;
-    }
-
-    public static SessionFilter ToSessionFilter(Session session)
+    public static SessionFilter ToSessionFilter(this Session session)
     {
         return new SessionFilter
         {
@@ -22,10 +14,8 @@ internal sealed class LogoutHandlerMapper : ILogoutHandlerMapper
         };
     }
 
-    public SessionUpdateItem ToSessionUpdateItem()
+    public static SessionUpdateItem ToSessionUpdateItem(DateTimeOffset currentTime)
     {
-        var currentTime = _clock.GetCurrentTime();
-
         return new SessionUpdateItem
         {
             CancellationTime = currentTime,

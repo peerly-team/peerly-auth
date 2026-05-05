@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using OneOf.Types;
+using Peerly.Auth.Abstractions.ApplicationServices;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
-using Peerly.Auth.ApplicationServices.Features.V1.Auth.Logout.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
@@ -14,13 +14,13 @@ internal sealed class LogoutHandler : ICommandHandler<LogoutCommand, Success>
 {
     private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IHashService _hashService;
-    private readonly ILogoutHandlerMapper _mapper;
+    private readonly IClock _clock;
 
-    public LogoutHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService, ILogoutHandlerMapper mapper)
+    public LogoutHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService, IClock clock)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _hashService = hashService;
-        _mapper = mapper;
+        _clock = clock;
     }
 
     public async Task<CommandResponse<Success>> ExecuteAsync(LogoutCommand command, CancellationToken cancellationToken)
@@ -38,8 +38,8 @@ internal sealed class LogoutHandler : ICommandHandler<LogoutCommand, Success>
             return ValidationError.From(SessionErrors.RefreshTokenForUserNotFound(command.RefreshToken, command.UserId));
         }
 
-        var sessionFilter = LogoutHandlerMapper.ToSessionFilter(session);
-        var sessionUpdateItem = _mapper.ToSessionUpdateItem();
+        var sessionFilter = session.ToSessionFilter();
+        var sessionUpdateItem = LogoutHandlerMapper.ToSessionUpdateItem(_clock.GetCurrentTime());
         _ = await unitOfWork.SessionRepository.UpdateAsync(sessionFilter, sessionUpdateItem, cancellationToken);
 
         return new Success();

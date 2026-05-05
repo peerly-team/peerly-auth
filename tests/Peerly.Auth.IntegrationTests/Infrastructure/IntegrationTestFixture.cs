@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Npgsql;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
 using Respawn;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -28,6 +29,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
     public NpgsqlDataSource DataSource => _dataSource ?? throw new InvalidOperationException("Integration fixture is not initialized.");
     public ConfirmEmailGrpcClient ConfirmEmailClient => ApplicationFactory.CreateConfirmEmailClient();
     public LoginGrpcClient LoginClient => ApplicationFactory.CreateLoginClient();
+    public LogoutGrpcClient LogoutClient => ApplicationFactory.CreateLogoutClient();
 
     public async Task InitializeAsync()
     {

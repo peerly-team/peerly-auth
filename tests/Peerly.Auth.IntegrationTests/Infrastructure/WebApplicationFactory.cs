@@ -16,6 +16,7 @@ using Peerly.Auth.Api.Infrastructure.Configuration;
 using Peerly.Auth.ApplicationServices.Extensions;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
 using Peerly.Auth.Persistence.Extensions;
 
 namespace Peerly.Auth.IntegrationTests.Infrastructure;
@@ -70,6 +71,11 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     public LoginGrpcClient CreateLoginClient()
     {
         return new LoginGrpcClient(CreateGrpcChannel());
+    }
+
+    public LogoutGrpcClient CreateLogoutClient()
+    {
+        return new LogoutGrpcClient(CreateGrpcChannel());
     }
 
     public IServiceProvider Services => _host?.Services
