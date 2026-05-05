@@ -5,28 +5,21 @@ using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.ApplicationServices.Features.Validation.Errors;
 using Peerly.Auth.ApplicationServices.Models.Common;
 using Peerly.Auth.ApplicationServices.Services.Abstractions;
-using Peerly.Auth.ApplicationServices.Services.Tokens.Abstractions;
-using Peerly.Auth.Exceptions;
-using Peerly.Auth.Models.Auth;
 
-namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Refresh;
 
-internal sealed class RefreshHandler : ICommandHandler<RefreshCommand, RefreshCommandResponse>
+internal sealed class RefreshCommandValidator : ICommandValidator<RefreshCommand, RefreshCommandResponse>
 {
-    public required ICommonUnitOfWorkFactory _unitOfWorkFactory;
-    public required IHashService _hashService;
-    public required ITokenService _tokenService;
+    private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IHashService _hashService;
 
-    public RefreshHandler(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService, ITokenService tokenService)
+    public RefreshCommandValidator(ICommonUnitOfWorkFactory unitOfWorkFactory, IHashService hashService)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _hashService = hashService;
-        _tokenService = tokenService;
     }
 
-    public async Task<CommandResponse<RefreshCommandResponse>> ExecuteAsync(
-        RefreshCommand command,
-        CancellationToken cancellationToken)
+    public async Task<CommandValidationResult> ValidateAsync(RefreshCommand command, CancellationToken cancellationToken)
     {
         var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
 
@@ -44,18 +37,9 @@ internal sealed class RefreshHandler : ICommandHandler<RefreshCommand, RefreshCo
         var userRole = await readOnlyUnitOfWork.ReadOnlyUserRepository.GetUserRoleAsync(command.UserId, cancellationToken);
         if (userRole is null)
         {
-            throw new NotFoundException();
+            return OtherError.NotFound();
         }
 
-        var accessToken = _tokenService.CreateAccessToken(command.UserId, userRole.Value);
-
-        return new RefreshCommandResponse
-        {
-            AuthToken = new AuthToken
-            {
-                AccessToken = accessToken,
-                RefreshToken = command.RefreshToken
-            }
-        };
+        return CommandValidationResult.Ok();
     }
 }

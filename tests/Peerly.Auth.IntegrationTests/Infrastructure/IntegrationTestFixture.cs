@@ -4,6 +4,7 @@ using Npgsql;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Refresh.Infrastructure;
 using Respawn;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -30,6 +31,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
     public ConfirmEmailGrpcClient ConfirmEmailClient => ApplicationFactory.CreateConfirmEmailClient();
     public LoginGrpcClient LoginClient => ApplicationFactory.CreateLoginClient();
     public LogoutGrpcClient LogoutClient => ApplicationFactory.CreateLogoutClient();
+    public RefreshGrpcClient RefreshClient => ApplicationFactory.CreateRefreshClient();
 
     public async Task InitializeAsync()
     {
