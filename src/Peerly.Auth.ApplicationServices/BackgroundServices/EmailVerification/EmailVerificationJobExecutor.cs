@@ -1,34 +1,35 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Peerly.Auth.Abstractions.UnitOfWork;
 using Peerly.Auth.ApplicationServices.Abstractions;
-using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Models;
+using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Abstractions;
 using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Options;
 using Peerly.Auth.Models.BackgroundService;
 using Peerly.Auth.Models.EmailVerifications;
-using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification;
 
 internal sealed class EmailVerificationJobExecutor : IExecutor<EmailVerificationJobItem>
 {
     private readonly ICommonUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailVerificationJobExecutor> _logger;
     private readonly SmtpOptions _smtpOptions;
 
     public EmailVerificationJobExecutor(
         ILogger<EmailVerificationJobExecutor> logger,
+        IEmailSender emailSender,
         IOptions<SmtpOptions> smtpOptions,
         ICommonUnitOfWorkFactory unitOfWorkFactory)
     {
         _logger = logger;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _emailSender = emailSender;
         _smtpOptions = smtpOptions.Value;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task RunAsync(EmailVerificationJobItem jobItem, CancellationToken cancellationToken)
@@ -43,22 +44,7 @@ internal sealed class EmailVerificationJobExecutor : IExecutor<EmailVerification
         try
         {
             var mimeMessage = BuildMessage(jobItem);
-
-            using var client = new SmtpClient();
-            await client.ConnectAsync(
-                _smtpOptions.Host,
-                _smtpOptions.Port,
-                ToSecureSocketOptions(_smtpOptions.SecurityMode),
-                cancellationToken);
-
-            if (_smtpOptions.Username is not null && _smtpOptions.Password is not null)
-            {
-                await client.AuthenticateAsync(_smtpOptions.Username, _smtpOptions.Password, cancellationToken);
-            }
-
-            await client.SendAsync(mimeMessage, cancellationToken);
-
-            await client.DisconnectAsync(true, cancellationToken);
+            await _emailSender.SendAsync(mimeMessage, cancellationToken);
 
             await unitOfWork.EmailVerificationRepository.UpdateAsync(
                 jobItem.UserId,
@@ -122,16 +108,5 @@ internal sealed class EmailVerificationJobExecutor : IExecutor<EmailVerification
         message.Body = bodyBuilder.ToMessageBody();
 
         return message;
-    }
-
-    private static SecureSocketOptions ToSecureSocketOptions(SmtpSecurityMode smtpSecurityMode)
-    {
-        return smtpSecurityMode switch
-        {
-            SmtpSecurityMode.None => SecureSocketOptions.None,
-            SmtpSecurityMode.StartTls => SecureSocketOptions.StartTls,
-            SmtpSecurityMode.SslOnConnect => SecureSocketOptions.SslOnConnect,
-            _ => throw new ArgumentOutOfRangeException(nameof(smtpSecurityMode), smtpSecurityMode, "Unsupported SMTP security mode")
-        };
     }
 }
