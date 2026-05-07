@@ -9,11 +9,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Peerly.Auth.Api.Controllers.Auth;
 using Peerly.Auth.Api.Extensions;
 using Peerly.Auth.Api.Infrastructure.Configuration;
+using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Abstractions;
 using Peerly.Auth.ApplicationServices.Extensions;
+using Peerly.Auth.IntegrationTests.BackgroundServices.EmailVerification.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.GetJwks.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
@@ -31,8 +34,11 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     private readonly string _databaseName;
     private readonly string _databaseUsername;
     private readonly string _databasePassword;
+    private readonly FakeEmailSender _fakeEmailSender = new();
     private IHost? _host;
     private GrpcChannel? _channel;
+
+    public FakeEmailSender EmailSender => _fakeEmailSender;
 
     public WebApplicationFactory(
         string databaseHost,
@@ -61,7 +67,12 @@ public sealed class WebApplicationFactory : IAsyncDisposable
                 {
                     webBuilder.UseEnvironment("IntegrationTests");
                     webBuilder.UseTestServer();
-                    webBuilder.ConfigureServices(ConfigureServices);
+                    webBuilder.ConfigureServices(
+                        (context, services) =>
+                        {
+                            ConfigureServices(context, services);
+                            services.Replace(ServiceDescriptor.Scoped<IEmailSender>(_ => _fakeEmailSender));
+                        });
                     webBuilder.Configure(ConfigureApplication);
                 })
             .StartAsync();
@@ -142,7 +153,16 @@ public sealed class WebApplicationFactory : IAsyncDisposable
             ["ConnectionFactoryOptions:Database"] = _databaseName,
             ["ConnectionFactoryOptions:UserName"] = _databaseUsername,
             ["ConnectionFactoryOptions:Password"] = _databasePassword,
-            ["ConnectionFactoryOptions:SslMode"] = "Disable"
+            ["ConnectionFactoryOptions:SslMode"] = "Disable",
+            ["EmailVerificationJob:MaxFailCount"] = "3",
+            ["EmailVerificationJob:ProcessTimeoutSeconds"] = "300",
+            ["EmailVerificationJob:MaxDegreeOfParallelism"] = "2",
+            ["EmailVerificationJob:BatchSize"] = "10",
+            ["Smtp:Host"] = "localhost",
+            ["Smtp:Port"] = "1025",
+            ["Smtp:SenderEmail"] = "test@peerly.app",
+            ["Smtp:SenderName"] = "Peerly Test",
+            ["Smtp:VerificationBaseUrl"] = "http://localhost:3000/confirm-email"
         };
     }
 
