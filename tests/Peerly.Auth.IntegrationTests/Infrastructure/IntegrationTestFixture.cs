@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Npgsql;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.GetJwks.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Register.Infrastructure;
@@ -34,6 +35,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
     public LogoutGrpcClient LogoutClient => ApplicationFactory.CreateLogoutClient();
     public RegisterGrpcClient RegisterClient => ApplicationFactory.CreateRegisterClient();
     public RefreshGrpcClient RefreshClient => ApplicationFactory.CreateRefreshClient();
+    public GetJwksGrpcClient GetJwksClient => ApplicationFactory.CreateGetJwksClient();
 
     public async Task InitializeAsync()
     {

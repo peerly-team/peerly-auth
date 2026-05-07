@@ -15,6 +15,7 @@ using Peerly.Auth.Api.Extensions;
 using Peerly.Auth.Api.Infrastructure.Configuration;
 using Peerly.Auth.ApplicationServices.Extensions;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.GetJwks.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Register.Infrastructure;
@@ -84,6 +85,11 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     public RegisterGrpcClient CreateRegisterClient()
     {
         return new RegisterGrpcClient(GetOrCreateGrpcChannel());
+    }
+
+    public GetJwksGrpcClient CreateGetJwksClient()
+    {
+        return new GetJwksGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public RefreshGrpcClient CreateRefreshClient()
