@@ -1,7 +1,7 @@
 using Peerly.Auth.ApplicationServices.Abstractions;
 using Peerly.Auth.Identifiers;
 
-namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Refresh;
 
 public sealed record RefreshCommand : ICommand<RefreshCommandResponse>
 {

@@ -1,6 +1,6 @@
 using Peerly.Auth.Models.Auth;
 
-namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.RefreshAccessToken;
+namespace Peerly.Auth.ApplicationServices.Features.V1.Auth.Refresh;
 
 public sealed record RefreshCommandResponse
 {

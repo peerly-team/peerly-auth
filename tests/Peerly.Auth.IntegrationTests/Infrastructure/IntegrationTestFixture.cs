@@ -1,9 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using Npgsql;
+using Peerly.Auth.IntegrationTests.BackgroundServices.EmailVerification.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.GetJwks.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Register.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Refresh.Infrastructure;
 using Respawn;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -30,6 +34,10 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
     public ConfirmEmailGrpcClient ConfirmEmailClient => ApplicationFactory.CreateConfirmEmailClient();
     public LoginGrpcClient LoginClient => ApplicationFactory.CreateLoginClient();
     public LogoutGrpcClient LogoutClient => ApplicationFactory.CreateLogoutClient();
+    public RegisterGrpcClient RegisterClient => ApplicationFactory.CreateRegisterClient();
+    public RefreshGrpcClient RefreshClient => ApplicationFactory.CreateRefreshClient();
+    public GetJwksGrpcClient GetJwksClient => ApplicationFactory.CreateGetJwksClient();
+    public FakeEmailSender EmailSender => ApplicationFactory.EmailSender;
 
     public async Task InitializeAsync()
     {

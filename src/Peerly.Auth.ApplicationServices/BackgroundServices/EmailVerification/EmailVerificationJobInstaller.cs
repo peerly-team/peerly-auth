@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Peerly.Auth.ApplicationServices.Abstractions;
+using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Abstractions;
 using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Options;
 using Peerly.Auth.ApplicationServices.Executors.Shared;
 using Peerly.Auth.Models.EmailVerifications;
@@ -23,6 +24,7 @@ internal sealed class EmailVerificationJobInstaller : IInstaller
             .BindConfiguration(SmtpOptions.SectionName);
 
         services
+            .AddScoped<IEmailSender, MailKitEmailSender>()
             .AddScoped<IMassExecutor<EmailVerificationJobItem>,
                 ConcurrentMassExecutorAdapter<EmailVerificationJobItem, EmailVerificationJobOptions>>()
             .AddScoped<IExecutor<EmailVerificationJobItem>, EmailVerificationJobExecutor>();

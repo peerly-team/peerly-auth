@@ -9,14 +9,20 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Peerly.Auth.Api.Controllers.Auth;
 using Peerly.Auth.Api.Extensions;
 using Peerly.Auth.Api.Infrastructure.Configuration;
+using Peerly.Auth.ApplicationServices.BackgroundServices.EmailVerification.Abstractions;
 using Peerly.Auth.ApplicationServices.Extensions;
+using Peerly.Auth.IntegrationTests.BackgroundServices.EmailVerification.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.ConfirmEmail.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.GetJwks.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Login.Infrastructure;
 using Peerly.Auth.IntegrationTests.Features.V1.Auth.Logout.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Register.Infrastructure;
+using Peerly.Auth.IntegrationTests.Features.V1.Auth.Refresh.Infrastructure;
 using Peerly.Auth.Persistence.Extensions;
 
 namespace Peerly.Auth.IntegrationTests.Infrastructure;
@@ -28,7 +34,11 @@ public sealed class WebApplicationFactory : IAsyncDisposable
     private readonly string _databaseName;
     private readonly string _databaseUsername;
     private readonly string _databasePassword;
+    private readonly FakeEmailSender _fakeEmailSender = new();
     private IHost? _host;
+    private GrpcChannel? _channel;
+
+    public FakeEmailSender EmailSender => _fakeEmailSender;
 
     public WebApplicationFactory(
         string databaseHost,
@@ -57,7 +67,12 @@ public sealed class WebApplicationFactory : IAsyncDisposable
                 {
                     webBuilder.UseEnvironment("IntegrationTests");
                     webBuilder.UseTestServer();
-                    webBuilder.ConfigureServices(ConfigureServices);
+                    webBuilder.ConfigureServices(
+                        (context, services) =>
+                        {
+                            ConfigureServices(context, services);
+                            services.Replace(ServiceDescriptor.Scoped<IEmailSender>(_ => _fakeEmailSender));
+                        });
                     webBuilder.Configure(ConfigureApplication);
                 })
             .StartAsync();
@@ -65,17 +80,32 @@ public sealed class WebApplicationFactory : IAsyncDisposable
 
     public ConfirmEmailGrpcClient CreateConfirmEmailClient()
     {
-        return new ConfirmEmailGrpcClient(CreateGrpcChannel());
+        return new ConfirmEmailGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public LoginGrpcClient CreateLoginClient()
     {
-        return new LoginGrpcClient(CreateGrpcChannel());
+        return new LoginGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public LogoutGrpcClient CreateLogoutClient()
     {
-        return new LogoutGrpcClient(CreateGrpcChannel());
+        return new LogoutGrpcClient(GetOrCreateGrpcChannel());
+    }
+
+    public RegisterGrpcClient CreateRegisterClient()
+    {
+        return new RegisterGrpcClient(GetOrCreateGrpcChannel());
+    }
+
+    public GetJwksGrpcClient CreateGetJwksClient()
+    {
+        return new GetJwksGrpcClient(GetOrCreateGrpcChannel());
+    }
+
+    public RefreshGrpcClient CreateRefreshClient()
+    {
+        return new RefreshGrpcClient(GetOrCreateGrpcChannel());
     }
 
     public IServiceProvider Services => _host?.Services
@@ -83,6 +113,8 @@ public sealed class WebApplicationFactory : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _channel?.Dispose();
+
         if (_host is not null)
         {
             await _host.StopAsync();
@@ -96,14 +128,13 @@ public sealed class WebApplicationFactory : IAsyncDisposable
             ?? throw new InvalidOperationException("Integration test host is not initialized.");
     }
 
-    private GrpcChannel CreateGrpcChannel()
+    private GrpcChannel GetOrCreateGrpcChannel()
     {
-        var handler = new GrpcWebHandler(GetTestServer().CreateHandler());
-        return GrpcChannel.ForAddress(
+        return _channel ??= GrpcChannel.ForAddress(
             "http://localhost",
             new GrpcChannelOptions
             {
-                HttpHandler = handler
+                HttpHandler = new GrpcWebHandler(GetTestServer().CreateHandler())
             });
     }
 
@@ -122,7 +153,16 @@ public sealed class WebApplicationFactory : IAsyncDisposable
             ["ConnectionFactoryOptions:Database"] = _databaseName,
             ["ConnectionFactoryOptions:UserName"] = _databaseUsername,
             ["ConnectionFactoryOptions:Password"] = _databasePassword,
-            ["ConnectionFactoryOptions:SslMode"] = "Disable"
+            ["ConnectionFactoryOptions:SslMode"] = "Disable",
+            ["EmailVerificationJob:MaxFailCount"] = "3",
+            ["EmailVerificationJob:ProcessTimeoutSeconds"] = "300",
+            ["EmailVerificationJob:MaxDegreeOfParallelism"] = "2",
+            ["EmailVerificationJob:BatchSize"] = "10",
+            ["Smtp:Host"] = "localhost",
+            ["Smtp:Port"] = "1025",
+            ["Smtp:SenderEmail"] = "test@peerly.app",
+            ["Smtp:SenderName"] = "Peerly Test",
+            ["Smtp:VerificationBaseUrl"] = "http://localhost:3000/confirm-email"
         };
     }
 
