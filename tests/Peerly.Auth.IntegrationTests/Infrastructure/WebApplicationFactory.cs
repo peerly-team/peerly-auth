@@ -154,6 +154,8 @@ public sealed class WebApplicationFactory : IAsyncDisposable
             ["ConnectionFactoryOptions:UserName"] = _databaseUsername,
             ["ConnectionFactoryOptions:Password"] = _databasePassword,
             ["ConnectionFactoryOptions:SslMode"] = "Disable",
+            ["ConnectionFactoryOptions:MaxPoolSize"] = "100",
+            ["ConnectionFactoryOptions:ConnectionIdleLifetime"] = "300",
             ["EmailVerificationJob:MaxFailCount"] = "3",
             ["EmailVerificationJob:ProcessTimeoutSeconds"] = "300",
             ["EmailVerificationJob:MaxDegreeOfParallelism"] = "2",
