@@ -39,7 +39,7 @@ internal sealed class LoginHandler : ICommandHandler<LoginCommand, LoginCommandR
             return error;
         }
 
-        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
+        await using var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
         var user = await unitOfWork.UserRepository.GetByEmailAsync(command.Email, cancellationToken);
 

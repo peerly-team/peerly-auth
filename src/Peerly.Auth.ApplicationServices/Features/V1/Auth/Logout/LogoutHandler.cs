@@ -25,7 +25,7 @@ internal sealed class LogoutHandler : ICommandHandler<LogoutCommand, Success>
 
     public async Task<CommandResponse<Success>> ExecuteAsync(LogoutCommand command, CancellationToken cancellationToken)
     {
-        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
+        await using var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
         var session = await unitOfWork.SessionRepository.GetAsync(command.UserId, cancellationToken);
         if (session is null)

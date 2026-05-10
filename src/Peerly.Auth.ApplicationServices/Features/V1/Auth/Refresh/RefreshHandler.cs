@@ -31,7 +31,7 @@ internal sealed class RefreshHandler : ICommandHandler<RefreshCommand, RefreshCo
             return error;
         }
 
-        var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
+        await using var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
 
         var userRole = await readOnlyUnitOfWork.ReadOnlyUserRepository.GetUserRoleAsync(command.UserId, cancellationToken);
         var accessToken = _tokenService.CreateAccessToken(command.UserId, userRole!.Value);

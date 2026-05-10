@@ -39,7 +39,7 @@ internal sealed class RegisterHandler : ICommandHandler<RegisterCommand, Registe
             return error;
         }
 
-        var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
+        await using var unitOfWork = await _unitOfWorkFactory.CreateAsync(cancellationToken);
 
         // NOTE: высчитываем хеш пароля перед открытием транзакции к БД, поскольку очень тяжелая операция
         var emailVerificationToken = _tokenService.CreateRefreshToken();
