@@ -41,6 +41,8 @@ internal sealed class UnitOfWorkInstaller : IInstaller
                 Username = opt.UserName,
                 Password = opt.Password,
                 Pooling = true,
+                MaxPoolSize = opt.MaxPoolSize,
+                ConnectionIdleLifetime = opt.ConnectionIdleLifetime,
                 SslMode = opt.SslMode,
             };
 

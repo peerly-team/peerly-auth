@@ -12,4 +12,7 @@ internal sealed class ConnectionFactoryOptions
     public required string UserName { get; init; }
     public required string Password { get; init; }
     public required SslMode SslMode { get; init; }
+
+    public required int MaxPoolSize { get; init; }
+    public required int ConnectionIdleLifetime { get; init; }
 }
