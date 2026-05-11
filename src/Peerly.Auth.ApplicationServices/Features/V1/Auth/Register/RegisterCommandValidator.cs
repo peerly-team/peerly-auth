@@ -19,7 +19,7 @@ internal sealed class RegisterCommandValidator : ICommandValidator<RegisterComma
 
     public async Task<CommandValidationResult> ValidateAsync(RegisterCommand command, CancellationToken cancellationToken)
     {
-        var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
+        await using var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
 
         var isEmailExists = await readOnlyUnitOfWork.ReadOnlyUserRepository.ExistsAsync(command.Email, cancellationToken);
         if (isEmailExists)

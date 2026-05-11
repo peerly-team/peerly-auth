@@ -21,7 +21,7 @@ internal sealed class LoginCommandValidator : ICommandValidator<LoginCommand, Lo
 
     public async Task<CommandValidationResult> ValidateAsync(LoginCommand command, CancellationToken cancellationToken)
     {
-        var unitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
+        await using var unitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
 
         var user = await unitOfWork.ReadOnlyUserRepository.GetByEmailAsync(command.Email, cancellationToken);
         if (user is null)

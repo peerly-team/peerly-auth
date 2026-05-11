@@ -21,7 +21,7 @@ internal sealed class RefreshCommandValidator : ICommandValidator<RefreshCommand
 
     public async Task<CommandValidationResult> ValidateAsync(RefreshCommand command, CancellationToken cancellationToken)
     {
-        var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
+        await using var readOnlyUnitOfWork = await _unitOfWorkFactory.CreateReadOnlyAsync(cancellationToken);
 
         var session = await readOnlyUnitOfWork.ReadOnlySessionRepository.GetAsync(command.UserId, cancellationToken);
         if (session is null)
